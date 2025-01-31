@@ -1,28 +1,28 @@
 function main(visualDataFile, groundTruthFile, expMapHistoryFile, odoMapHistoryFile, vtHistoryFile, emHistoryFile, gcTrajFile, hdcTrajFile,varargin)
-    % NeuroSLAM System Copyright (C) 2018-2019 
-    % NeuroSLAM: A Brain inspired SLAM System for 3D Environments
-    %
-    % Fangwen Yu (www.yufangwen.com), Jianga Shang, Youjian Hu, Michael Milford(www.michaelmilford.com) 
-    %
-    % The NeuroSLAM V1.0 (MATLAB) was developed based on the OpenRatSLAM (David et al. 2013). 
-    % The RatSLAM V0.3 (MATLAB) developed by David Ball, Michael Milford and Gordon Wyeth in 2008.
-    % 
-    % Reference:
-    % Ball, David, Scott Heath, Janet Wiles, Gordon Wyeth, Peter Corke, and Michael Milford.
-    % "OpenRatSLAM: an open source brain-based SLAM system." Autonomous Robots 34, no. 3 (2013): 149-176.
-    % 
-    % This program is free software: you can redistribute it and/or modify
-    % it under the terms of the GNU General Public License as published by
-    % the Free Software Foundation, either version 3 of the License, or
-    % (at your option) any later version.
-    % 
-    % This program is distributed in the hope that it will be useful,
-    % but WITHOUT ANY WARRANTY; without even the implied warranty of
-    % MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    % GNU General Public License for more details.
-    % 
-    % You should have received a copy of the GNU General Public License
-    % along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    %%% NeuroSLAM System Copyright (C) 2018-2019 
+    %%% NeuroSLAM: A Brain inspired SLAM System for 3D Environments
+    %%%
+    %%% Fangwen Yu (www.yufangwen.com), Jianga Shang, Youjian Hu, Michael Milford(www.michaelmilford.com) 
+    %%%
+    %%% The NeuroSLAM V1.0 (MATLAB) was developed based on the OpenRatSLAM (David et al. 2013). 
+    %%% The RatSLAM V0.3 (MATLAB) developed by David Ball, Michael Milford and Gordon Wyeth in 2008.
+    %%% 
+    %%% Reference:
+    %%% Ball, David, Scott Heath, Janet Wiles, Gordon Wyeth, Peter Corke, and Michael Milford.
+    %%% "OpenRatSLAM: an open source brain-based SLAM system." Autonomous Robots 34, no. 3 (2013): 149-176.
+    %%% 
+    %%% This program is free software: you can redistribute it and/or modify
+    %%% it under the terms of the GNU General Public License as published by
+    %%% the Free Software Foundation, either version 3 of the License, or
+    %%% (at your option) any later version.
+    %%% 
+    %%% This program is distributed in the hope that it will be useful,
+    %%% but WITHOUT ANY WARRANTY; without even the implied warranty of
+    %%% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    %%% GNU General Public License for more details.
+    %%% 
+    %%% You should have received a copy of the GNU General Public License
+    %%% along with this program.  If not, see <http://www.gnu.org/licenses/>.
     
     %% Initial some variables
     % Transform the angle from degree to radian
@@ -181,7 +181,7 @@ function main(visualDataFile, groundTruthFile, expMapHistoryFile, odoMapHistoryF
     
     vtcurFrame = 1;
     preImg = 0;
-    % global EXP_NODES_LINKS;
+    %%% global EXP_NODES_LINKS;
     EXP_NODES_LINKS.nodes(1) = 1;
     EXP_NODES_LINKS.numlinks(1) = 0;
     EXP_NODES_LINKS.linknodes(1, 1) = 0;
@@ -393,13 +393,13 @@ function main(visualDataFile, groundTruthFile, expMapHistoryFile, odoMapHistoryF
 
                     phandles = contourslice(GRIDCELLS, 1:2:GC_X_DIM, 1:2:GC_Y_DIM, 1:2:GC_Z_DIM, 10); 
                     axis([1 GC_X_DIM 1 GC_Y_DIM 1 GC_Z_DIM]);
-                    % view(3);
+                    %%% view(3);
                     set(phandles,'LineWidth',0.5);
-                    % grid on;
+                    %%% grid on;
                     hold on;
-                    % plot3(MAX_ACTIVE_XYZ_PATH(:,2), MAX_ACTIVE_XYZ_PATH(:,1),  MAX_ACTIVE_XYZ_PATH(:,3), '.m', 'MarkerSize',8);
-                    % plot3([MAX_ACTIVE_XYZ_PATH(end,2) MAX_ACTIVE_XYZ_PATH(end,2)], [MAX_ACTIVE_XYZ_PATH(end,1) MAX_ACTIVE_XYZ_PATH(end,1)], [0 gcZ], 'MarkerSize',8);
-                    % plot3([MAX_ACTIVE_XYZ_PATH(end,1) MAX_ACTIVE_XYZ_PATH(end,1)],[MAX_ACTIVE_XYZ_PATH(end,2) MAX_ACTIVE_XYZ_PATH(end,2)],  [0 gcZ], 'MarkerSize',8);
+                    %%% plot3(MAX_ACTIVE_XYZ_PATH(:,2), MAX_ACTIVE_XYZ_PATH(:,1),  MAX_ACTIVE_XYZ_PATH(:,3), '.m', 'MarkerSize',8);
+                    %%% plot3([MAX_ACTIVE_XYZ_PATH(end,2) MAX_ACTIVE_XYZ_PATH(end,2)], [MAX_ACTIVE_XYZ_PATH(end,1) MAX_ACTIVE_XYZ_PATH(end,1)], [0 gcZ], 'MarkerSize',8);
+                    %%% plot3([MAX_ACTIVE_XYZ_PATH(end,1) MAX_ACTIVE_XYZ_PATH(end,1)],[MAX_ACTIVE_XYZ_PATH(end,2) MAX_ACTIVE_XYZ_PATH(end,2)],  [0 gcZ], 'MarkerSize',8);
 
                     hold off;
                     xl = xlabel('y', 'FontSize',12);
@@ -411,10 +411,10 @@ function main(visualDataFile, groundTruthFile, expMapHistoryFile, odoMapHistoryF
                     view(20,20)
                     
                     axis([0 36 0 36 0 36]);
-                    % set(xl,'Rotation',15);
-                    % set(yl,'Rotation',-30);
-                    % set(gca,'FontSize',24, 'LineWidth',1.5); % axis font
-                    % fig = get(groot,'CurrentFigure');
+                    %%% set(xl,'Rotation',15);
+                    %%% set(yl,'Rotation',-30);
+                    %%% set(gca,'FontSize',24, 'LineWidth',1.5); % axis font
+                    %%% fig = get(groot,'CurrentFigure');
                     title('3D Grid Cell Activity (x,y,z)');
                     set(gca,'FontSize',12, 'LineWidth',1.2); % axis font
                       
@@ -440,9 +440,9 @@ function main(visualDataFile, groundTruthFile, expMapHistoryFile, odoMapHistoryF
                     title('Multi-layered HDC (yaw,height)');
                     axis on
                     set(gca,'FontSize',12, 'LineWidth',1.2); % axis font
-                    % view(40,20)
+                    %%% view(40,20)
                     
-                    % figure(3)
+                    %%% figure(3)
                     % draw the history of visual templates
                     subplot(8, 9, [7 27], 'replace');
                     hold on
@@ -450,33 +450,33 @@ function main(visualDataFile, groundTruthFile, expMapHistoryFile, odoMapHistoryF
                         (expTrajectory(:,1) ) * EXP_MAP_Y_SCALING, ...
                         expTrajectory(:,3) * EXP_MAP_Z_SCALING, '.b', 'MarkerSize',10);
                     
-                    % if gtHasValue == 1 
-                        % plot3((gt_x(startFrame:curFrame * ODO_STEP)-gt_x(startFrame)) * GT_EXP_X_SCALING, ...
-                        % (gt_y(startFrame:curFrame * ODO_STEP)-gt_y(startFrame)) * GT_EXP_Y_SCALING, ...
-                        % (gt_z(startFrame:curFrame * ODO_STEP)-gt_z(startFrame)) * GT_EXP_Z_SCALING, '.r');
-                    % end
+                    %%% if gtHasValue == 1 
+                        %%% plot3((gt_x(startFrame:curFrame * ODO_STEP)-gt_x(startFrame)) * GT_EXP_X_SCALING, ...
+                        %%% (gt_y(startFrame:curFrame * ODO_STEP)-gt_y(startFrame)) * GT_EXP_Y_SCALING, ...
+                        %%% (gt_z(startFrame:curFrame * ODO_STEP)-gt_z(startFrame)) * GT_EXP_Z_SCALING, '.r');
+                    %%% end
                     hold off;
                     grid on
                     view(3)
-                  % view(0, 90);
+                  %%% view(0, 90);
                     xl = xlabel('exp-x');
                     yl = ylabel('exp-y');
                     zlabel('exp-z');
                     set(xl,'Rotation',15);
                     set(yl,'Rotation',-30);
                     title('Multilayered Experience Map');
-                    % legend('Result','Truth' ,'1');
+                    %%% legend('Result','Truth' ,'1');
 
                     % SynPerData
                     %  axis([-3 13 -5 20 -0.5 3]);
                     
                     % QUT
-                    % axis([-1 55 -20 30 -0.5 3]);
+                    %%% axis([-1 55 -20 30 -0.5 3]);
                         
                     % SynPanData
-                    % axis([0 140 -230 50 -0.5 18]);
+                    %%% axis([0 140 -230 50 -0.5 18]);
     
-                    % axis equal                    
+                    %%% axis equal                    
                     axis on
                     rotate3d on
                     set(gca,'FontSize',12, 'LineWidth',1.2); % axis font
@@ -488,34 +488,34 @@ function main(visualDataFile, groundTruthFile, expMapHistoryFile, odoMapHistoryF
                         (odoMapTrajectory(:,1)) * ODO_MAP_Y_SCALING, ...
                         (odoMapTrajectory(:,3) ) * ODO_MAP_Z_SCALING, '.b', 'MarkerSize',10);
                     
-                    % if gtHasValue == 1
-                        % plot3((gt_x(startFrame:curFrame) - gt_x(startFrame)) * GT_ODO_X_SCALING, ...
-                        % (gt_y(startFrame:curFrame) - gt_y(startFrame)) * GT_ODO_Y_SCALING, ...
-                        % (gt_z(startFrame:curFrame) - gt_z(startFrame)) * GT_ODO_Z_SCALING, '.r');
-                    % end
+                    %%% if gtHasValue == 1
+                        %%% plot3((gt_x(startFrame:curFrame) - gt_x(startFrame)) * GT_ODO_X_SCALING, ...
+                        %%% (gt_y(startFrame:curFrame) - gt_y(startFrame)) * GT_ODO_Y_SCALING, ...
+                        %%% (gt_z(startFrame:curFrame) - gt_z(startFrame)) * GT_ODO_Z_SCALING, '.r');
+                    %%% end
                     
                     hold off;
                     view(3);
                     grid on;
-                    % view(0, 90);
+                    %%% view(0, 90);
                     xl = xlabel('odo-map-x');
                     yl = ylabel('odo-map-y');
                     zlabel('odo-map-z');
                     set(xl,'Rotation',15);
                     set(yl,'Rotation',-30);
                     title('Multilayered Odometry Map');
-                    % legend('Result','Truth' ,'1');
+                    %%% legend('Result','Truth' ,'1');
 
                     % SynPerData
                     %axis([-4 13 -5 20 -0.5 3]);
-                     % SynPanData
-                    % axis([-5 150 -170 50 -0.5 18]);
+                     %%% SynPanData
+                    %%% axis([-5 150 -170 50 -0.5 18]);
 
                     % SynPerData
                     % %     axis([-5 20 -20 5 -1 3]);
 
                     % qutdata
-                    % axis([-10 48 -40 40 -0.5 3]);
+                    %%% axis([-10 48 -40 40 -0.5 3]);
                     
                     axis on
                     rotate3d on
@@ -538,12 +538,12 @@ function main(visualDataFile, groundTruthFile, expMapHistoryFile, odoMapHistoryF
                     title('Current yaw (decoded from HDC) ');
                     set(gca,'FontSize',12, 'LineWidth',1.2); % axis font
                     
-                    % % draw current odo yaw theta
-                    % subplot(8, 9, 65, 'replace');
-                    % polar(Theta,Rho);
-                    % hold on
-                    % plot([startpoint(1) odoYawTheta(curFrame,1)],[startpoint(2) odoYawTheta(curFrame,2)],'linewidth',1,'color',[0.9 0 0]);
-                    % title('Current odo yaw');
+                    %%% % draw current odo yaw theta
+                    %%% subplot(8, 9, 65, 'replace');
+                    %%% polar(Theta,Rho);
+                    %%% hold on
+                    %%% plot([startpoint(1) odoYawTheta(curFrame,1)],[startpoint(2) odoYawTheta(curFrame,2)],'linewidth',1,'color',[0.9 0 0]);
+                    %%% title('Current odo yaw');
 
                     subplot(8, 9, [55 65], 'replace');
                     plot(EXP_HISTORY, '.','MarkerSize',10);
@@ -564,7 +564,7 @@ function main(visualDataFile, groundTruthFile, expMapHistoryFile, odoMapHistoryF
                     
                     drawnow;
                                      
-                    % save_gc_hdc_trajectory(gcTrajFile, hdcTrajFile, MAX_ACTIVE_XYZ_PATH, MAX_ACTIVE_YAW_HEIGHT_HIS_PATH);
+                    %%% save_gc_hdc_trajectory(gcTrajFile, hdcTrajFile, MAX_ACTIVE_XYZ_PATH, MAX_ACTIVE_YAW_HEIGHT_HIS_PATH);
        
                 end
                 
@@ -573,11 +573,11 @@ function main(visualDataFile, groundTruthFile, expMapHistoryFile, odoMapHistoryF
              
              end
               
-            % save_history_data(expMapHistoryFile, expTrajectory);
-            % save_history_data(odoMapHistoryFile, odoMapTrajectory);
-            % save_em_history_data(emHistoryFile, VT_HISTORY);
-            % save_vt_history_data(vtHistoryFile, EXP_HISTORY);
-            % save_gc_hdc_trajectory(gcTrajFile, hdcTrajFile, MAX_ACTIVE_XYZ_PATH, MAX_ACTIVE_YAW_HEIGHT_HIS_PATH);
+            %%% save_history_data(expMapHistoryFile, expTrajectory);
+            %%% save_history_data(odoMapHistoryFile, odoMapTrajectory);
+            %%% save_em_history_data(emHistoryFile, VT_HISTORY);
+            %%% save_vt_history_data(vtHistoryFile, EXP_HISTORY);
+            %%% save_gc_hdc_trajectory(gcTrajFile, hdcTrajFile, MAX_ACTIVE_XYZ_PATH, MAX_ACTIVE_YAW_HEIGHT_HIS_PATH);
 
      end
   end
