@@ -8,6 +8,13 @@ const count = function* (start = 0, end = Infinity, step = 1) {
         count += step
     }
 }
+const product = (array)=>{
+    let result = 1
+    for (let each of array) {
+        result *= each
+    }
+    return result
+}
 
 export const Ops = {
     ones: (shape)=>Object.setPrototypeOf(torch.ones(shape), TensorWrapper.prototype),
