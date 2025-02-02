@@ -97,6 +97,20 @@ export class Tensor extends torch.Tensor {
             return Object.setPrototypeOf(super.sum(dim, keepdims), Tensor.prototype)
         }
     }
+    mean(dim, keepdims=false) {
+        if (dim == null) {
+            return this.flatten().mean().data[0]
+        } else {
+            return Object.setPrototypeOf(super.mean(dim, keepdims), Tensor.prototype)
+        }
+    }
+    variance(dim, keepdims=false) {
+        if (dim == null) {
+            return this.flatten().variance().data[0]
+        } else {
+            return Object.setPrototypeOf(super.variance(dim, keepdims), Tensor.prototype)
+        }
+    }
     
     // 
     // adds or removes defaults
@@ -182,9 +196,6 @@ export class Tensor extends torch.Tensor {
     matmul(...args) {
         return Object.setPrototypeOf(super.matmul(...args), Tensor.prototype)
     }
-    mean(...args) {
-        return Object.setPrototypeOf(super.mean(...args), Tensor.prototype)
-    }
     mul(...args) {
         return Object.setPrototypeOf(super.mul(...args), Tensor.prototype)
     }
@@ -205,8 +216,5 @@ export class Tensor extends torch.Tensor {
     }
     transpose(...args) {
         return Object.setPrototypeOf(super.transpose(...args), Tensor.prototype)
-    }
-    variance(...args) {
-        return Object.setPrototypeOf(super.variance(...args), Tensor.prototype)
     }
 }
