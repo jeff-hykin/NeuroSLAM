@@ -1,0 +1,1 @@
+export { torch } from "https://esm.sh/gh/jeff-hykin/esm-pytorch@v0.7.2.1/src/index.ts"
