@@ -90,6 +90,13 @@ export class Tensor extends torch.Tensor {
     at(...dimensions) {
         return recursiveSlice(this.data, dimensions, this.shape)
     }
+    sum(dim, keepdims=false) {
+        if (dim == null) {
+            return this.flatten().sum().data[0]
+        } else {
+            return Object.setPrototypeOf(super.sum(dim, keepdims), Tensor.prototype)
+        }
+    }
     
     // 
     // adds or removes defaults
@@ -150,6 +157,9 @@ export class Tensor extends torch.Tensor {
             return this.reshape(shape)
         }
     }
+    slice(...args) {
+        return new Tensor(this.data.slice(...args))
+    }
 
     // 
     // wrap output of these:
@@ -192,9 +202,6 @@ export class Tensor extends torch.Tensor {
     }
     sub(...args) {
         return Object.setPrototypeOf(super.sub(...args), Tensor.prototype)
-    }
-    sum(...args) {
-        return Object.setPrototypeOf(super.sum(...args), Tensor.prototype)
     }
     transpose(...args) {
         return Object.setPrototypeOf(super.transpose(...args), Tensor.prototype)
