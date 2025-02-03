@@ -2,6 +2,7 @@ import { Tensor, Ops } from "../utils/tensor_wrapper.js"
 
 export function visualOdoInitial(initGlobals, ...args) {
     let odoGlobals = {
+        // see 07_test/test_aidvo/SynPanData/test_vo_ov_SynPanData.js for example inputs
         ...initGlobals,
     }
 
