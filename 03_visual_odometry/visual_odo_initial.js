@@ -1,6 +1,6 @@
 import { Tensor, Ops } from "../utils/tensor_wrapper.js"
 
-export function visualOdoInitial(...args) {
+export function visualOdoInitial(initGlobals, ...args) {
     let odoGlobals = {
         ODO_IMG_TRANS_Y_RANGE: null,
         ODO_IMG_TRANS_X_RANGE: null,
@@ -57,78 +57,79 @@ export function visualOdoInitial(...args) {
             // odoGlobals.FOV_VERT_DEGREE = 20
             // odoGlobals.KEY_POINT_SET = new Tensor([3750, 4700, 8193, 9210]) // [3750, 4700, 8193, 9210]
             // odoGlobals.ODO_STEP = 5
-
+        ...initGlobals,
     }
-    // Process input parameters
-    for (let i = 0; i < args.length; i++) {
-        if (typeof args[i] === "string") {
-            switch (args[i]) {
-                case "ODO_IMG_TRANS_Y_RANGE":
-                    odoGlobals.ODO_IMG_TRANS_Y_RANGE = args[i + 1]
-                    break
-                case "ODO_IMG_TRANS_X_RANGE":
-                    odoGlobals.ODO_IMG_TRANS_X_RANGE = args[i + 1]
-                    break
-                case "ODO_IMG_HEIGHT_V_Y_RANGE":
-                    odoGlobals.ODO_IMG_HEIGHT_V_Y_RANGE = args[i + 1]
-                    break
-                case "ODO_IMG_HEIGHT_V_X_RANGE":
-                    odoGlobals.ODO_IMG_HEIGHT_V_X_RANGE = args[i + 1]
-                    break
-                case "ODO_IMG_YAW_ROT_Y_RANGE":
-                    odoGlobals.ODO_IMG_YAW_ROT_Y_RANGE = args[i + 1]
-                    break
-                case "ODO_IMG_YAW_ROT_X_RANGE":
-                    odoGlobals.ODO_IMG_YAW_ROT_X_RANGE = args[i + 1]
-                    break
-                case "ODO_IMG_TRANS_RESIZE_RANGE":
-                    odoGlobals.ODO_IMG_TRANS_RESIZE_RANGE = args[i + 1]
-                    break
-                case "ODO_IMG_YAW_ROT_RESIZE_RANGE":
-                    odoGlobals.ODO_IMG_YAW_ROT_RESIZE_RANGE = args[i + 1]
-                    break
-                case "ODO_IMG_HEIGHT_V_RESIZE_RANGE":
-                    odoGlobals.ODO_IMG_HEIGHT_V_RESIZE_RANGE = args[i + 1]
-                    break
-                case "ODO_TRANS_V_SCALE":
-                    odoGlobals.ODO_TRANS_V_SCALE = args[i + 1]
-                    break
-                case "ODO_YAW_ROT_V_SCALE":
-                    odoGlobals.ODO_YAW_ROT_V_SCALE = args[i + 1]
-                    break
-                case "ODO_HEIGHT_V_SCALE":
-                    odoGlobals.ODO_HEIGHT_V_SCALE = args[i + 1]
-                    break
-                case "MAX_TRANS_V_THRESHOLD":
-                    odoGlobals.MAX_TRANS_V_THRESHOLD = args[i + 1]
-                    break
-                case "MAX_YAW_ROT_V_THRESHOLD":
-                    odoGlobals.MAX_YAW_ROT_V_THRESHOLD = args[i + 1]
-                    break
-                case "MAX_HEIGHT_V_THRESHOLD":
-                    odoGlobals.MAX_HEIGHT_V_THRESHOLD = args[i + 1]
-                    break
-                case "ODO_SHIFT_MATCH_HORI":
-                    odoGlobals.ODO_SHIFT_MATCH_HORI = args[i + 1]
-                    break
-                case "ODO_SHIFT_MATCH_VERT":
-                    odoGlobals.ODO_SHIFT_MATCH_VERT = args[i + 1]
-                    break
-                case "FOV_HORI_DEGREE":
-                    odoGlobals.FOV_HORI_DEGREE = args[i + 1]
-                    break
-                case "FOV_VERT_DEGREE":
-                    odoGlobals.FOV_VERT_DEGREE = args[i + 1]
-                    break
-                case "KEY_POINT_SET":
-                    odoGlobals.KEY_POINT_SET = args[i + 1]
-                    break
-                case "ODO_STEP":
-                    odoGlobals.ODO_STEP = args[i + 1]
-                    break
-            }
-        }
-    }
+    // matlab code
+        // Process input parameters
+        // for (let i = 0; i < args.length; i++) {
+        //     if (typeof args[i] === "string") {
+        //         switch (args[i]) {
+        //             case "ODO_IMG_TRANS_Y_RANGE":
+        //                 odoGlobals.ODO_IMG_TRANS_Y_RANGE = args[i + 1]
+        //                 break
+        //             case "ODO_IMG_TRANS_X_RANGE":
+        //                 odoGlobals.ODO_IMG_TRANS_X_RANGE = args[i + 1]
+        //                 break
+        //             case "ODO_IMG_HEIGHT_V_Y_RANGE":
+        //                 odoGlobals.ODO_IMG_HEIGHT_V_Y_RANGE = args[i + 1]
+        //                 break
+        //             case "ODO_IMG_HEIGHT_V_X_RANGE":
+        //                 odoGlobals.ODO_IMG_HEIGHT_V_X_RANGE = args[i + 1]
+        //                 break
+        //             case "ODO_IMG_YAW_ROT_Y_RANGE":
+        //                 odoGlobals.ODO_IMG_YAW_ROT_Y_RANGE = args[i + 1]
+        //                 break
+        //             case "ODO_IMG_YAW_ROT_X_RANGE":
+        //                 odoGlobals.ODO_IMG_YAW_ROT_X_RANGE = args[i + 1]
+        //                 break
+        //             case "ODO_IMG_TRANS_RESIZE_RANGE":
+        //                 odoGlobals.ODO_IMG_TRANS_RESIZE_RANGE = args[i + 1]
+        //                 break
+        //             case "ODO_IMG_YAW_ROT_RESIZE_RANGE":
+        //                 odoGlobals.ODO_IMG_YAW_ROT_RESIZE_RANGE = args[i + 1]
+        //                 break
+        //             case "ODO_IMG_HEIGHT_V_RESIZE_RANGE":
+        //                 odoGlobals.ODO_IMG_HEIGHT_V_RESIZE_RANGE = args[i + 1]
+        //                 break
+        //             case "ODO_TRANS_V_SCALE":
+        //                 odoGlobals.ODO_TRANS_V_SCALE = args[i + 1]
+        //                 break
+        //             case "ODO_YAW_ROT_V_SCALE":
+        //                 odoGlobals.ODO_YAW_ROT_V_SCALE = args[i + 1]
+        //                 break
+        //             case "ODO_HEIGHT_V_SCALE":
+        //                 odoGlobals.ODO_HEIGHT_V_SCALE = args[i + 1]
+        //                 break
+        //             case "MAX_TRANS_V_THRESHOLD":
+        //                 odoGlobals.MAX_TRANS_V_THRESHOLD = args[i + 1]
+        //                 break
+        //             case "MAX_YAW_ROT_V_THRESHOLD":
+        //                 odoGlobals.MAX_YAW_ROT_V_THRESHOLD = args[i + 1]
+        //                 break
+        //             case "MAX_HEIGHT_V_THRESHOLD":
+        //                 odoGlobals.MAX_HEIGHT_V_THRESHOLD = args[i + 1]
+        //                 break
+        //             case "ODO_SHIFT_MATCH_HORI":
+        //                 odoGlobals.ODO_SHIFT_MATCH_HORI = args[i + 1]
+        //                 break
+        //             case "ODO_SHIFT_MATCH_VERT":
+        //                 odoGlobals.ODO_SHIFT_MATCH_VERT = args[i + 1]
+        //                 break
+        //             case "FOV_HORI_DEGREE":
+        //                 odoGlobals.FOV_HORI_DEGREE = args[i + 1]
+        //                 break
+        //             case "FOV_VERT_DEGREE":
+        //                 odoGlobals.FOV_VERT_DEGREE = args[i + 1]
+        //                 break
+        //             case "KEY_POINT_SET":
+        //                 odoGlobals.KEY_POINT_SET = args[i + 1]
+        //                 break
+        //             case "ODO_STEP":
+        //                 odoGlobals.ODO_STEP = args[i + 1]
+        //                 break
+        //         }
+        //     }
+        // }
 
     // Initialize the previous image intensity sums
     odoGlobals.PREV_YAW_ROT_V_IMG_X_SUMS = new Tensor( new Array(odoGlobals.ODO_IMG_TRANS_RESIZE_RANGE[1]).fill(0) )
