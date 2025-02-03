@@ -3,13 +3,10 @@ import { torch } from "../imports.js"
 
 export function visualOdometry(rawImg, odoGlobals) {
     const {
-        ODO_IMG_TRANS_Y_RANGE,
-        ODO_IMG_TRANS_X_RANGE,
         ODO_IMG_HEIGHT_V_Y_RANGE,
         ODO_IMG_HEIGHT_V_X_RANGE,
         ODO_IMG_YAW_ROT_Y_RANGE,
         ODO_IMG_YAW_ROT_X_RANGE,
-        ODO_IMG_TRANS_RESIZE_RANGE,
         ODO_IMG_YAW_ROT_RESIZE_RANGE,
         ODO_IMG_HEIGHT_V_RESIZE_RANGE,
         ODO_TRANS_V_SCALE,
@@ -22,10 +19,6 @@ export function visualOdometry(rawImg, odoGlobals) {
         ODO_SHIFT_MATCH_HORI,
         FOV_HORI_DEGREE,
         FOV_VERT_DEGREE,
-        KEY_POINT_SET,
-        ODO_STEP,
-        PREV_TRANS_V_IMG_X_SUMS,
-        PREV_YAW_ROT_V_IMG_X_SUMS,
         PREV_HEIGHT_V_IMG_Y_SUMS,
         PREV_TRANS_V,
         PREV_YAW_ROT_V,
