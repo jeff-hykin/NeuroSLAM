@@ -34,7 +34,7 @@ function [subFoldersPathSet,numSubFolders] = get_images_data_info(visualDataFile
     rootPathOfData = visualDataFile;
     
     % get all sub folders path as a list
-    subFoldersPathList = genpath(rootPathOfData);
+    subFoldersPathList = genpath(rootPathOfData); % list of all paths joined by semicolons
     lenSubFolderPathList = size(subFoldersPathList,2);
     
     % all sub folders path set 
@@ -43,7 +43,7 @@ function [subFoldersPathSet,numSubFolders] = get_images_data_info(visualDataFile
 
     % parser the sub folder path from a path string
     for i = 1 : lenSubFolderPathList 
-        if subFoldersPathList(i) ~= ';'
+        if subFoldersPathList(i) ~= ';' % if char is not a semicolon
             temp = [temp subFoldersPathList(i)];
         else 
             temp = [temp '\']; 
