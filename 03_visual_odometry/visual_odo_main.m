@@ -94,12 +94,12 @@ function visual_odo_main(visualDataFile,groundTruthFile)
     IMG_TYPE = '*.png';
           
     global OFFSET_YAW_ROT; 
-    offset_yaw_rot_vector = [];
-    offset_yaw_rot_vector(1) = 0;
+    offsetYawRotVector = [];
+    offsetYawRotVector(1) = 0;
     
     global OFFSET_HEIGHT_V;
-    offset_height_V_vector = [];
-    offset_height_V_vector(1) = 0;
+    offsetHeightVVector = [];
+    offsetHeightVVector(1) = 0;
     
     odoMapTrajectory(1,1) = 0;
     odoMapTrajectory(1,2) = 0;
@@ -169,8 +169,8 @@ function visual_odo_main(visualDataFile,groundTruthFile)
                 transVelVector(curFrame) = transV;
                 heightVelVector(curFrame) = heightV;
                 
-                offset_yaw_rot_vector(curFrame) = OFFSET_YAW_ROT;
-                offset_height_V_vector(curFrame) = OFFSET_HEIGHT_V;
+                offsetYawRotVector(curFrame) = OFFSET_YAW_ROT;
+                offsetHeightVVector(curFrame) = OFFSET_HEIGHT_V;
                 
                 sumHeight(curFrame + 1) = sumHeight(curFrame) + heightV;
                 
@@ -325,8 +325,8 @@ function visual_odo_main(visualDataFile,groundTruthFile)
                     % render the horizontal translational velocity
                     subplot(3, 4, 12, 'replace');
                     hold on
-                    plot(offset_yaw_rot_vector, 'r');
-                    plot(offset_height_V_vector, 'g');
+                    plot(offsetYawRotVector, 'r');
+                    plot(offsetHeightVVector, 'g');
                     hold off
                     title('Offset yaw rotation');
                     xlabel('Time');
