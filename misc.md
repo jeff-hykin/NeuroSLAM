@@ -1,6 +1,6 @@
 ```sh
-octave \                                                                                                                                                                                         
-    --path=./01_conjunctive_pose_cells_network/3d_grid_cells_network/ \ 
+octave \
+    --path=./01_conjunctive_pose_cells_network/3d_grid_cells_network/ \
     --path=./02_multilayered_experience_map/ \
     --path=./03_visual_odometry/ \
     --path=./04_visual_template/ \
