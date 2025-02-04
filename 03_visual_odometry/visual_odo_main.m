@@ -119,12 +119,19 @@ function visual_odo_main(visualDataFile,groundTruthFile)
     %% processing visual odometry
     for iSubFolder = 1 : numSubFolders
         
-        [curFolderPath, imgFilesPathList, numImgs] = get_cur_img_files_path_list(subFoldersPathSet, IMG_TYPE, iSubFolder);
+        curFolderPath =  subFoldersPathSet{iSubFolder}; 
+        % get all image file path list in current sub folder
+        imgFilesPathList = dir(strcat(curFolderPath,IMG_TYPE));
+        % sort the path list by sequence
+        imgFilesPathList = sortObj(imgFilesPathList);
+        % get the num of all images in current sub folder
+        numImgs = length(imgFilesPathList); 
         
         if numImgs > 0
-            for indFrame = startFrame :ODO_STEP: numImgs-1
+            for indFrame = startFrame:ODO_STEP: numImgs-1
                 curFrame = curFrame + 1;
-                [curImg] = read_current_image(curFolderPath, imgFilesPathList, indFrame);
+                % read current image
+                curImg = imread(strcat(curFolderPath,imgFilesPathList(indFrame).name));
 
                 % visual templates and visual odo uses intensity so convert to grayscale
                 curGrayImg = rgb2gray(curImg);

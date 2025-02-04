@@ -42,7 +42,8 @@ function [frameId, gt_x, gt_y, gt_z, gt_rx, gt_ry, gt_rz] = load_ground_truth_da
     %   column7: double (%f)
     % For more information, see the TEXTSCAN documentation.
     formatSpec = '%d%f%f%f%f%f%f%[^\n\r]';
-
+    
+    groundTruthFile
     %% Open the text file.
     fileID = fopen(groundTruthFile,'r');
 
