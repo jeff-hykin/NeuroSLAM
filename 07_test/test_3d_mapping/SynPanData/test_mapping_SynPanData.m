@@ -116,13 +116,13 @@ exp_initial( ...
     
 % main process 
 % file path: visualDataFile, expMapHistoryFile, odoMapHistoryFile, groundTruthFile,vtHistoryFile, emHistoryFile, varargin
-imageFolderPath = 'C:\NeuroSLAM_Datasets\01_NeuroSLAM_Datasets\02_SynPanData';
+imageFolderPath = './01_NeuroSLAM_Datasets.ignore/02_SynPanData';
 SynPerDataFile = fullfile (imageFolderPath, '');
 
-gtDataFolderPath = 'C:\NeuroSLAM_Datasets\02_NeuroSLAM_Groudtruth';
+gtDataFolderPath = './02_NeuroSLAM_Groudtruth.ignore';
 gtDataFile = fullfile(gtDataFolderPath, '02_SynPanData_GT.txt');
 
-experiDataPath = 'C:\NeuroSLAM_Datasets\03_NeuroSLAM_Experiments_Results\SynPanData';
+experiDataPath = './03_NeuroSLAM_Experiments_Results.ignore/SynPanData';
 expMapFile  = fullfile(experiDataPath, '01_exp_map_ml.txt');
 odoMapFile  = fullfile(experiDataPath, '02_odo_map_ml.txt');
 emHisFile   = fullfile(experiDataPath, '03_em_history_ml.txt');

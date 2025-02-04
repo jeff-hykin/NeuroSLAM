@@ -27,7 +27,7 @@ function [out_minimum_offset, out_minimum_difference_intensity] = compare_segmen
     % input parameters
     % seg1, seg2 represent 1D arrays of the intensity profiles of the current image and previous image.
     % shift_length is the range of offsets in pixels to consider i.e. slen = 0 considers only the no offset case
-    % compare_length_of_intensity is the length of the intensity profile to actually compare, and must be < than image width – 1 * slen
+    % compare_length_of_intensity is the length of the intensity profile to actually compare, and must be < than image width ï¿½ 1 * slen
 
     % output parameters
     % minimum_offset  the minimum shift offset when the difference of intensity

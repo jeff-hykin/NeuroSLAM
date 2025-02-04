@@ -24,14 +24,14 @@
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 % % SynPerData
-% hdcTrajFile = 'C:\NeuroSLAM_Datasets\03_NeuroSLAM_Experiments_Results\SynPerData\06_hdc_trajectory.txt';
+% hdcTrajFile = './03_NeuroSLAM_Experiments_Results.ignore/SynPerData/06_hdc_trajectory.txt';
 % 
 % 
 % % SynPanData
-% hdcTrajFile = 'C:\NeuroSLAM_Datasets\03_NeuroSLAM_Experiments_Results\SynPanData\06_hdc_trajectory.txt';
+% hdcTrajFile = './03_NeuroSLAM_Experiments_Results.ignore/SynPanData/06_hdc_trajectory.txt';
 
 % QUTCarparkData
-hdcTrajFile = 'C:\NeuroSLAM_Datasets\03_NeuroSLAM_Experiments_Results\QUTCarparData\06_hdc_trajectory.txt';
+hdcTrajFile = './03_NeuroSLAM_Experiments_Results.ignore/QUTCarparData/06_hdc_trajectory.txt';
 
 
 plot_hdc_traj_main(hdcTrajFile);

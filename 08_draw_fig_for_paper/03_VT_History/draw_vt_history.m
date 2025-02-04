@@ -25,12 +25,12 @@
 
 
 % % SynPerData
-% vtHistoryFile = 'C:\NeuroSLAM_Datasets\03_NeuroSLAM_Experiments_Results\SynPerData\04_vt_history_ml.txt';
+% vtHistoryFile = './03_NeuroSLAM_Experiments_Results.ignore/SynPerData/04_vt_history_ml.txt';
 
 % % SynPanData
-% vtHistoryFile = 'C:\NeuroSLAM_Datasets\03_NeuroSLAM_Experiments_Results\SynPanData\04_vt_history_ml.txt';
+% vtHistoryFile = './03_NeuroSLAM_Experiments_Results.ignore/SynPanData/04_vt_history_ml.txt';
 
 % QUTCarparkData
-vtHistoryFile = 'C:\NeuroSLAM_Datasets\03_NeuroSLAM_Experiments_Results\QUTCarparData\04_vt_history_ml.txt';
+vtHistoryFile = './03_NeuroSLAM_Experiments_Results.ignore/QUTCarparData/04_vt_history_ml.txt';
 
 plot_vt_history(vtHistoryFile);
