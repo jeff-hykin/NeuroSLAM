@@ -1,0 +1,36 @@
+```sh
+octave \                                                                                                                                                                                         
+    --path=./01_conjunctive_pose_cells_network/3d_grid_cells_network/ \ 
+    --path=./02_multilayered_experience_map/ \
+    --path=./03_visual_odometry/ \
+    --path=./04_visual_template/ \
+    --path=./05_tookit/load_data/ \
+    --path=./05_tookit/plot_history_data/ \
+    --path=./05_tookit/process_visual_data/process_images_data/ \
+    --path=./05_tookit/process_visual_data/process_video_data/ \
+    --path=./05_tookit/save_history_data/ \
+    --path=./05_tookit/save_images_from_video/ \
+    --path=./05_tookit/sort_imge_path_list/ \
+    --path=./06_main/ \
+    --path=./07_test/test_3d_mapping/QUTCarparkData/ \
+    --path=./07_test/test_3d_mapping/SynPanData/ \
+    --path=./07_test/test_3d_mapping/SynPerData/ \
+    --path=./07_test/test_aidvo/QUTCarparkData/ \
+    --path=./07_test/test_aidvo/SynPanData/ \
+    --path=./07_test/test_aidvo/SynPerData/ \
+    --path=./07_test/test_vt/SynPanData/ \
+    --path=./08_draw_fig_for_paper/01_EM_OM/QUTCarparkData/ \
+    --path=./08_draw_fig_for_paper/01_EM_OM/SynPanData/ \
+    --path=./08_draw_fig_for_paper/01_EM_OM/SynPerData/ \
+    --path=./08_draw_fig_for_paper/02_EM_History/ \
+    --path=./08_draw_fig_for_paper/03_VT_History/ \
+    --path=./08_draw_fig_for_paper/05_GC_HDC_Activity/ \
+    --path=./08_draw_fig_for_paper/06_HDC_Traj/ \
+    --path=./08_draw_fig_for_paper/06_HDC_Traj/plot_hdc_traj_main.m \
+    /Users/jeffhykin/repos/NeuroSLAM/07_test/test_aidvo/SynPanData/test_vo_ov_SynPanData.m
+```
+
+File path replacer
+```sh
+ss --find '("|'"'"')C:\\.+?(\1)' --replace 's=>s.replace(/C:\\NeuroSLAM_Datasets\\(\w+)/g,"./$1.ignore").replace(/\\/g,"/")' **/*.m                                                              
+```
