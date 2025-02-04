@@ -43,7 +43,8 @@ function [subFoldersPathSet,numSubFolders] = get_images_data_info(visualDataFile
 
     % parser the sub folder path from a path string
     for i = 1 : lenSubFolderPathList 
-        if subFoldersPathList(i) ~= ';' % if char is not a semicolon
+        % if subFoldersPathList(i) ~= ';' % if char is not a semicolon
+        if subFoldersPathList(i) ~= ':' % its : on non-windows machines, semicolon on windows machines
             temp = [temp subFoldersPathList(i)];
         else 
             temp = [temp '\']; 
