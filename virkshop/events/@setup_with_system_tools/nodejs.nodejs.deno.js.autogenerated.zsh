@@ -25,6 +25,6 @@ AKA the @setup_with_system_tools/nodejs isn'"'"'t allowed to return an object.`)
                                                         data: shellString,
                                                         path: tempShellOutputPath,
                                                     })
-                                                ' '--' '/Users/jeffhykin/repos/nixpkg_electron_template/virkshop/support/virkshop.js' '/Users/jeffhykin/repos/nixpkg_electron_template/virkshop/temporary.ignore/short_term/event_evals/09099836619196005.sh' 'nodejs.deno.js'
+                                                ' '--' '/Users/jeffhykin/repos/NeuroSLAM/virkshop/support/virkshop.js' '/Users/jeffhykin/repos/NeuroSLAM/virkshop/temporary.ignore/short_term/event_evals/05644355469244315.sh' 'nodejs.deno.js'
 ;
-'.' '/Users/jeffhykin/repos/nixpkg_electron_template/virkshop/temporary.ignore/short_term/event_evals/09099836619196005.sh'
+'.' '/Users/jeffhykin/repos/NeuroSLAM/virkshop/temporary.ignore/short_term/event_evals/05644355469244315.sh'

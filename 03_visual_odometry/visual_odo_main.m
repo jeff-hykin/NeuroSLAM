@@ -44,6 +44,7 @@ function visual_odo_main(visualDataFile,groundTruthFile)
 
     % get the visual data info
     [subFoldersPathSet, numSubFolders] = get_images_data_info(visualDataFile);
+    numSubFolders
 
     % load ground truth data
     if nargin > 1
@@ -115,12 +116,14 @@ function visual_odo_main(visualDataFile,groundTruthFile)
     
     curFrame = 0;
     startFrame = 1;
-
+    
     %% processing visual odometry
     for iSubFolder = 1 : numSubFolders
         
-        curFolderPath =  subFoldersPathSet{iSubFolder}; 
+        %curFolderPath =  subFoldersPathSet{iSubFolder}; 
+        curFolderPath =  './01_NeuroSLAM_Datasets.ignore/02_SynPanData/';
         % get all image file path list in current sub folder
+        %imgFilesPathList = dir(strcat(curFolderPath,IMG_TYPE));
         imgFilesPathList = dir(strcat(curFolderPath,IMG_TYPE));
         % sort the path list by sequence
         imgFilesPathList = sortObj(imgFilesPathList);
@@ -200,8 +203,10 @@ function visual_odo_main(visualDataFile,groundTruthFile)
                 curRotDir(curFrame + 1, 2) = sin(curRotDir(curFrame, 3) + yawRotV );
                 curRotDir(curFrame + 1, 3) = curRotDir(curFrame, 3) + yawRotV;
  
-                odoMapTrajectory(curFrame + 1,1) = odoMapTrajectory(curFrame,1) + transV * cos(sym(curRotDir(curFrame + 1, 3)));
-                odoMapTrajectory(curFrame + 1,2) = odoMapTrajectory(curFrame,2) + transV * sin(sym(curRotDir(curFrame + 1, 3)));
+                odoMapTrajectory(curFrame + 1,1) = odoMapTrajectory(curFrame,1) + transV * cos((curRotDir(curFrame + 1, 3)));
+                odoMapTrajectory(curFrame + 1,2) = odoMapTrajectory(curFrame,2) + transV * sin((curRotDir(curFrame + 1, 3)));
+                %odoMapTrajectory(curFrame + 1,1) = odoMapTrajectory(curFrame,1) + transV * cos(sym(curRotDir(curFrame + 1, 3)));
+                %odoMapTrajectory(curFrame + 1,2) = odoMapTrajectory(curFrame,2) + transV * sin(sym(curRotDir(curFrame + 1, 3)));
                 odoMapTrajectory(curFrame + 1,3) = odoMapTrajectory(curFrame,3) + heightV;
                 odoMapTrajectory(curFrame + 1,4) = curRotDir(curFrame + 1, 3);
                 

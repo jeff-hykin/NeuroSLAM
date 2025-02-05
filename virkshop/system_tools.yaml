@@ -7,6 +7,9 @@
     saveVariableAs: "defaultWarehouse"
     createWarehouseFrom:
         tarFileUrl: "https://github.com/NixOS/nixpkgs/archive/23.11.tar.gz"
+        # tarFileUrl: "https://github.com/NixOS/nixpkgs/archive/3a989f7ef581a0a8a4d87da4a26c2000ffa59d4d.tar.gz"
+        # tarFileUrl: "https://github.com/NixOS/nixpkgs/archive/22.11.tar.gz"
+        
     arguments:
         config:
             allowUnfree: true
@@ -19,6 +22,11 @@
     arguments:
         config: {}
 
+- (warehouse):
+    saveVariableAs: "warehouseForOctave"
+    createWarehouseFrom: { nixCommitHash: "3a989f7ef581a0a8a4d87da4a26c2000ffa59d4d" }
+    arguments:
+        config: {}
 
 # 
 # 
@@ -63,6 +71,12 @@
 #     saveVariableAs: isRaspbian
 #     value: !!deno |
 #         await Deno.readTextFile("/etc/os-release").catch(_=>false).then(text=>!!text.match(/raspbian/i))
+
+# example6: create an isRaspbian variable
+- (compute):
+    saveVariableAs: justOctaveInside
+    value: !!nix |
+        ({ octave = warehouseForOctave.octave.withPackages (octavePackages: [ octavePackages.image ]); })
 
 # available tags:
     # !!var               # marks that a string will be intepreted as a variable name, and the value of the variable will be used
@@ -396,5 +410,17 @@
 
 - (package):
     load: [ "gcc" ]
+    asBuildInput: true
+    asNativeBuildInput: true
+
+# - (package):
+#     load: [ "octavePackages","image" ]
+#     from: !!var warehouseForOctave
+#     asBuildInput: true
+#     asNativeBuildInput: true
+
+- (package):
+    load: [ "octave" ]
+    from: !!var justOctaveInside
     asBuildInput: true
     asNativeBuildInput: true

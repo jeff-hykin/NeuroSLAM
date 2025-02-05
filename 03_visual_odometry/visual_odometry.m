@@ -23,7 +23,7 @@ function [transV, yawRotV, heightV] = visual_odometry(rawImg)
 % 
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-   
+    disp("visual_odometry()");
     % The simple visual odometry with scanline intensity profile algorithm.
     % the input is a raw image
     % the output including horizontal translational velocity, rotational velocity,
@@ -103,6 +103,8 @@ function [transV, yawRotV, heightV] = visual_odometry(rawImg)
     % get the sub_image for rotational velocity from raw image with range constrait
     subRawImg = rawImg(ODO_IMG_YAW_ROT_Y_RANGE, ODO_IMG_YAW_ROT_X_RANGE);
     subRawImg = imresize(subRawImg, ODO_IMG_YAW_ROT_RESIZE_RANGE); 
+    % size(subRawImg) %    100   120
+    % subRawImg % print
     horiDegPerPixel = FOV_HORI_DEGREE / size(subRawImg, 2);
     
     SUB_YAW_ROT_IMG = subRawImg;

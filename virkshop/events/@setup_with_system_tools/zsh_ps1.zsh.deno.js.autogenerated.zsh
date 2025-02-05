@@ -25,6 +25,6 @@ AKA the @setup_with_system_tools/zsh_ps1 isn'"'"'t allowed to return an object.`
                                                         data: shellString,
                                                         path: tempShellOutputPath,
                                                     })
-                                                ' '--' '/Users/jeffhykin/repos/nixpkg_electron_template/virkshop/support/virkshop.js' '/Users/jeffhykin/repos/nixpkg_electron_template/virkshop/temporary.ignore/short_term/event_evals/03953039987915685.sh' 'zsh.deno.js'
+                                                ' '--' '/Users/jeffhykin/repos/NeuroSLAM/virkshop/support/virkshop.js' '/Users/jeffhykin/repos/NeuroSLAM/virkshop/temporary.ignore/short_term/event_evals/07932497389228115.sh' 'zsh.deno.js'
 ;
-'.' '/Users/jeffhykin/repos/nixpkg_electron_template/virkshop/temporary.ignore/short_term/event_evals/03953039987915685.sh'
+'.' '/Users/jeffhykin/repos/NeuroSLAM/virkshop/temporary.ignore/short_term/event_evals/07932497389228115.sh'

@@ -35,7 +35,9 @@ function [subFoldersPathSet,numSubFolders] = get_images_data_info(visualDataFile
     
     % get all sub folders path as a list
     subFoldersPathList = genpath(rootPathOfData); % list of all paths joined by semicolons
+    subFoldersPathList
     lenSubFolderPathList = size(subFoldersPathList,2);
+    lenSubFolderPathList
     
     % all sub folders path set 
     subFoldersPathSet = {};

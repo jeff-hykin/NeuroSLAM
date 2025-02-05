@@ -1,4 +1,7 @@
-```sh
+# python3.8
+export PATH="/opt/homebrew/bin/:$PATH"
+# ln "/opt/homebrew/bin/python3.8" "/opt/homebrew/bin/python"
+
 /Applications/Octave-9.1.app/Contents/Resources/usr/Cellar/octave-octapp@9.1.0/9.1.0/bin/octave \
     --path=./01_conjunctive_pose_cells_network/3d_grid_cells_network/ \
     --path=./02_multilayered_experience_map/ \
@@ -28,13 +31,3 @@
     --path=./08_draw_fig_for_paper/06_HDC_Traj/ \
     --path=./08_draw_fig_for_paper/06_HDC_Traj/plot_hdc_traj_main.m \
     ./07_test/test_aidvo/SynPanData/test_vo_ov_SynPanData.m
-```
-
-File path replacer
-```sh
-ss --find '("|'"'"')C:\\.+?(\1)' --replace 's=>s.replace(/C:\\NeuroSLAM_Datasets\\(\w+)/g,"./$1.ignore").replace(/\\/g,"/")' **/*.m                                                              
-```
-
-nix-shell --packages 'octave.withPackages (ps: with ps; [ control ])' --run 'octave --eval "pkg load control; help lsim"'
-nix repl -I nixpkgs=https://github.com/NixOS/nixpkgs/archive/3a989f7ef581a0a8a4d87da4a26c2000ffa59d4d.tar.gz
-https://github.com/NixOS/nixpkgs/archive/122adac3284a1ab0d987bf607286c7b10c34b984.tar.gz
