@@ -1,4 +1,4 @@
-function createYawHeightHdcWeights(yawDim, heightDim, yawVar, heightVar) {
+export function createYawHeightHdcWeights(yawDim, heightDim, yawVar, heightVar) {
     // Calculate the centers for yaw and height dimensions
     const yawDimCentre = Math.floor(yawDim / 2) + 1
     const heightDimCentre = Math.floor(heightDim / 2) + 1
@@ -15,7 +15,7 @@ function createYawHeightHdcWeights(yawDim, heightDim, yawVar, heightVar) {
     }
 
     // Normalize the weight array
-    let total = weight.flat().reduce((acc, val) => acc + val, 0) // Flatten the 2D array and sum all values
+    let total = weight.flat(Infinity).reduce((acc, val) => acc + val, 0) // Flatten the 2D array and sum all values
     for (let i = 0; i < yawDim; i++) {
         for (let j = 0; j < heightDim; j++) {
             weight[i][j] = weight[i][j] / total
