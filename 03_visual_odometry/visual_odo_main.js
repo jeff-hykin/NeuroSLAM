@@ -77,7 +77,7 @@ export function visualOdoMain({visualDataFile, groundTruthFile, odoGlobals}) {
                 let curGrayImg = toGrayscaleMagnitude(
                     decode(
                         Deno.readFileSync(imagePath)
-                    )
+                    ),
                 )
                 
                 // Simulating visual odometry (transV, yawRotV, heightV)
