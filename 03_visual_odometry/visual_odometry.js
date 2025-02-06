@@ -185,7 +185,7 @@ export function visualOdometry(rawImg, odoGlobals) {
     if (minOffsetYawRot > 0) {
         subRawImg = subRawImg.at([0, subRawImg.shape[0]], [minOffsetYawRot, subRawImg.shape[1]])
     } else {
-        subRawImg = subRawImg.at([0, subRawImg.shape[0]], [0, -minOffsetYawRot])
+        subRawImg = subRawImg.at([0, subRawImg.shape[0]], [0, subRawImg.shape[1]-minOffsetYawRot])
         // original: subRawImg = subRawImg(:, 1 : end -(-minOffsetYawRot));
         // note: I really don't understand the original code's (end -(-minOffsetYawRot))
     }

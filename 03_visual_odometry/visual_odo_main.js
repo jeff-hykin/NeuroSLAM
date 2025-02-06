@@ -16,7 +16,7 @@ export function visualOdoMain({visualDataFile, groundTruthFile, odoGlobals}) {
     const paths = FileSystem.sync.listFolderPathsIn(visualDataFile)
 
     const { RENDER_RATE } = { RENDER_RATE: 2, ...odoGlobals }
-    let curFrame = 0
+    let curFrame = -1
     let startFrame = 1 // not sure why 
     // Load ground truth data if provided
     // for some reason this isn't ever used, so I'm commenting it out --Jeff
@@ -79,13 +79,16 @@ export function visualOdoMain({visualDataFile, groundTruthFile, odoGlobals}) {
                         Deno.readFileSync(imagePath)
                     ),
                 )
+                let preProfilesTransImg = odoGlobals.PREV_TRANS_V_IMG_X_SUMS
+                let preProfilesYawRotImg = odoGlobals.PREV_YAW_ROT_V_IMG_X_SUMS
+                let preProfilesHeightVImg = odoGlobals.PREV_HEIGHT_V_IMG_Y_SUMS
                 
                 // Simulating visual odometry (transV, yawRotV, heightV)
                 var { transV, yawRotV, heightV, sideEffects } = visualOdometry(curGrayImg, odoGlobals)
                 console.debug(`transV is:`,transV)
                 console.debug(`yawRotV is:`,yawRotV)
                 console.debug(`heightV is:`,heightV)
-                Deno.exit()
+                // Deno.exit()
                 // showing what gets changed (sometimes) by visualOdometry
                 Object.assign(odoGlobals, {
                     SUB_YAW_ROT_IMG: sideEffects.SUB_YAW_ROT_IMG,
@@ -132,6 +135,7 @@ export function visualOdoMain({visualDataFile, groundTruthFile, odoGlobals}) {
                     
                     // Function to compute the normalized profile of horizontal translational image
                     function normalizeProfileHorizontal(imgMatrix) {
+                        imgMatrix = imgMatrix.data
                         let profilesTransImg = imgMatrix.reduce((acc, row) => acc.map((sum, idx) => sum + row[idx]), Array(imgMatrix[0].length).fill(0))
                         let avgIntensity = profilesTransImg.reduce((sum, value) => sum + value, 0) / profilesTransImg.length
                         return profilesTransImg.map((value) => value / avgIntensity) // Normalize the profile
@@ -139,6 +143,7 @@ export function visualOdoMain({visualDataFile, groundTruthFile, odoGlobals}) {
 
                     // Function to compute the normalized profile of rotational image
                     function normalizeProfileRotational(imgMatrix) {
+                        imgMatrix = imgMatrix.data
                         let profilesYawRotImg = imgMatrix.reduce((acc, row) => acc.map((sum, idx) => sum + row[idx]), Array(imgMatrix[0].length).fill(0))
                         let avgIntensity = profilesYawRotImg.reduce((sum, value) => sum + value, 0) / profilesYawRotImg.length
                         return profilesYawRotImg.map((value) => value / avgIntensity) // Normalize the profile
@@ -146,6 +151,7 @@ export function visualOdoMain({visualDataFile, groundTruthFile, odoGlobals}) {
 
                     // Function to compute the normalized profile of vertical translational image
                     function normalizeProfileVertical(imgMatrix) {
+                        imgMatrix = imgMatrix.data
                         let profilesHeightVImg = imgMatrix.reduce((acc, row) => acc.map((sum, idx) => sum + row[idx]), Array(imgMatrix.length).fill(0))
                         let avgIntensity = profilesHeightVImg.reduce((sum, value) => sum + value, 0) / profilesHeightVImg.length
                         return profilesHeightVImg.map((value) => value / avgIntensity) // Normalize the profile
