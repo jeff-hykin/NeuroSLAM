@@ -85,10 +85,7 @@ export function visualOdoMain({visualDataFile, groundTruthFile, odoGlobals}) {
                 
                 // Simulating visual odometry (transV, yawRotV, heightV)
                 var { transV, yawRotV, heightV, sideEffects } = visualOdometry(curGrayImg, odoGlobals)
-                console.debug(`transV is:`,transV)
-                console.debug(`yawRotV is:`,yawRotV)
-                console.debug(`heightV is:`,heightV)
-                // Deno.exit()
+
                 // showing what gets changed (sometimes) by visualOdometry
                 Object.assign(odoGlobals, {
                     SUB_YAW_ROT_IMG: sideEffects.SUB_YAW_ROT_IMG,
@@ -239,6 +236,7 @@ export function visualOdoMain({visualDataFile, groundTruthFile, odoGlobals}) {
                         //     mode: 'lines',
                         //     name: 'Yaw Rotational Velocity'
                         // };
+                        console.debug(`subRotVel is:`,subRotVel)
 
                         // var trace9 = {
                         //     z: odoGlobals.SUB_HEIGHT_V_IMG, 
