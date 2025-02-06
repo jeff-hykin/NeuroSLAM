@@ -1,6 +1,4 @@
 export function yawHeightHdcIteration(vt_id, yawRotV, heightV, g) {
-    // functions: VT
-
     // Pose cell update steps
     // 1. Add view template energy
     // 2. Local excitation
@@ -33,16 +31,16 @@ export function yawHeightHdcIteration(vt_id, yawRotV, heightV, g) {
     let newYawHeightHdc = structuredClone(g.YAW_HEIGHT_HDC)
 
     // if this isn't a new visual template then add the energy at its associated posecell location
-    if (VT(vt_id).first != 1) {
-        let actYaw = min([max([round(VT(vt_id).hdc_yaw), 1]), g.YAW_HEIGHT_HDC_Y_DIM]);
-        let actHeight = min([max([round(VT(vt_id).hdc_height), 1]), g.YAW_HEIGHT_HDC_H_DIM]);
+    if (g.VT(vt_id).first != 1) {
+        let actYaw = min([max([round(g.VT(vt_id).hdc_yaw), 1]), g.YAW_HEIGHT_HDC_Y_DIM]);
+        let actHeight = min([max([round(g.VT(vt_id).hdc_height), 1]), g.YAW_HEIGHT_HDC_H_DIM]);
 
         // this decays the amount of energy that is injected at the visual template's posecell location
         // this is important as the posecell Posecells will errounously snap 
         // for bad visual template matches that occur over long periods (eg a bad matches that
         // occur while the agent is stationary). This means that multiple visual template's
         // need to be recognised for a snap to happen
-        energy = g.YAW_HEIGHT_HDC_VT_INJECT_ENERGY * 1/30 * (30 - exp(1.2 * VT(vt_id).decay));
+        energy = g.YAW_HEIGHT_HDC_VT_INJECT_ENERGY * 1/30 * (30 - exp(1.2 * g.VT(vt_id).decay));
         if (energy > 0) {
             newYawHeightHdc[actYaw][actHeight] = newYawHeightHdc[actYaw][actHeight] + energy;
         }
