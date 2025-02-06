@@ -25,6 +25,7 @@ const crappyRenderAsAsciiGrayscale = (imgIntentsityTensor)=>{
     }
 }
 
+// NOTE: ths JS version seems to be fully correct!
 export function visualOdometry(rawImg, odoGlobals) {
     const {
         ODO_IMG_HEIGHT_V_Y_RANGE,
@@ -43,7 +44,7 @@ export function visualOdometry(rawImg, odoGlobals) {
         ODO_SHIFT_MATCH_HORI,
         FOV_HORI_DEGREE,
         FOV_VERT_DEGREE,
-        PREV_HEIGHT_V_IMG_Y_SUMS,
+        // PREV_HEIGHT_V_IMG_Y_SUMS, // mutated
         PREV_TRANS_V,
         PREV_YAW_ROT_V,
         PREV_HEIGHT_V,
@@ -84,13 +85,13 @@ export function visualOdometry(rawImg, odoGlobals) {
         //     console.log(``)
         // }
     // Step 1: Compute horizontal rotational velocity (yaw)
-    console.debug(`rawImg.height is:`,rawImg.height)
-    console.debug(`rawImg.width is:`,rawImg.width)
-    console.debug(`rawImg is:`,rawImg.length)
-    console.debug(`rawImg is:`,rawImg[0].length)
-    console.debug(`ODO_IMG_YAW_ROT_Y_RANGE is:`,ODO_IMG_YAW_ROT_Y_RANGE)
-    console.debug(`ODO_IMG_YAW_ROT_X_RANGE is:`,ODO_IMG_YAW_ROT_X_RANGE)
-    console.debug(`ODO_IMG_YAW_ROT_RESIZE_RANGE is:`,ODO_IMG_YAW_ROT_RESIZE_RANGE)
+    // console.debug(`rawImg.height is:`,rawImg.height)
+    // console.debug(`rawImg.width is:`,rawImg.width)
+    // console.debug(`rawImg is:`,rawImg.length)
+    // console.debug(`rawImg is:`,rawImg[0].length)
+    // console.debug(`ODO_IMG_YAW_ROT_Y_RANGE is:`,ODO_IMG_YAW_ROT_Y_RANGE)
+    // console.debug(`ODO_IMG_YAW_ROT_X_RANGE is:`,ODO_IMG_YAW_ROT_X_RANGE)
+    // console.debug(`ODO_IMG_YAW_ROT_RESIZE_RANGE is:`,ODO_IMG_YAW_ROT_RESIZE_RANGE)
     let rawImgTensor = new Tensor(rawImg)
         // let referenceImgTensor = new Tensor([
         //     [0.4501,0.4501,0.4500,0.4503,0.4496,0.4503,0.4499,0.4499, 0.4502,0.4499],
@@ -161,7 +162,6 @@ export function visualOdometry(rawImg, odoGlobals) {
     // console.debug(`subRawImg.sum(0).data.join(" ") is:`,subRawImg.sum(0).data.map(each=>each.toFixed(3)).join(" "))
     // console.debug(`imgXSums.data.join(" ") is:`,imgXSums.data.map(each=>each.toFixed(3)).join(" "))
     
-    // NOTE: JS seems to be correct up to this point!
 
     // Step 3: Compare the current image with the previous image
     let { minimumOffset: minOffsetYawRot, minimumDifferenceIntensity: minDiffIntensityRot } = compareSegments({
@@ -170,8 +170,9 @@ export function visualOdometry(rawImg, odoGlobals) {
         shiftLength: ODO_SHIFT_MATCH_HORI,
         compareLengthOfIntensity: imgXSums.length,
     })
-    console.debug(`minOffsetYawRot is:`,minOffsetYawRot)
-    console.debug(`minDiffIntensityRot is:`,minDiffIntensityRot)
+    
+    // console.debug(`minOffsetYawRot is:`,minOffsetYawRot)
+    // console.debug(`minDiffIntensityRot is:`,minDiffIntensityRot)
 
     sideEffects.OFFSET_YAW_ROT = minOffsetYawRot
     let yawRotV = ODO_YAW_ROT_V_SCALE * minOffsetYawRot * horiDegPerPixel // in degrees
@@ -195,25 +196,35 @@ export function visualOdometry(rawImg, odoGlobals) {
     }
 
     // Step 5: Compute height change velocity (vertical velocity)
-    subRawImg = rawImg.slice(ODO_IMG_HEIGHT_V_Y_RANGE[0], ODO_IMG_HEIGHT_V_Y_RANGE[1], ODO_IMG_HEIGHT_V_X_RANGE[0], ODO_IMG_HEIGHT_V_X_RANGE[1])
-    subRawImg = Image.resize(subRawImg, ODO_IMG_HEIGHT_V_RESIZE_RANGE)
+    const compensatedOdoImgHeightVYRange = [ODO_IMG_HEIGHT_V_Y_RANGE[0], ODO_IMG_HEIGHT_V_Y_RANGE[1]+1]
+    subRawImg = rawImgTensor.at(compensatedOdoImgHeightVYRange.map(each=>each-1), ODO_IMG_HEIGHT_V_X_RANGE.map(each=>each-1))
+    // console.debug(`subRawImg.shape is:`,subRawImg.shape)
+
     let vertDegPerPixel = FOV_VERT_DEGREE / subRawImg.length
 
     // Adjust image based on yaw offset
     if (minOffsetYawRot > 0) {
-        subRawImg = subRawImg.map((row) => row.slice(minOffsetYawRot))
+        subRawImg = subRawImg.at([0, subRawImg.shape[0]], [minOffsetYawRot, subRawImg.shape[1]])
     } else {
-        subRawImg = subRawImg.map((row) => row.slice(0, row.length - Math.abs(minOffsetYawRot)))
+        subRawImg = subRawImg.at([0, subRawImg.shape[0]], [0, -minOffsetYawRot])
+        // original: subRawImg = subRawImg(:, 1 : end -(-minOffsetYawRot));
+        // note: I really don't understand the original code's (end -(-minOffsetYawRot))
     }
+    // console.debug(`subRawImg.shape is:`,subRawImg.shape)
+    // crappyRenderAsAsciiGrayscale(subRawImg.at([0,10], [0,10]))
 
     sideEffects.SUB_HEIGHT_V_IMG = subRawImg
 
     // Compute y-sums (sum of intensities along each row)
-    let imageYSums = subRawImg.reduce((acc, row) => acc.map((sum, i) => sum + row[i]), Array(subRawImg.length).fill(0))
-    let avgIntensityHeight = imageYSums.reduce((sum, val) => sum + val, 0) / imageYSums.length
-    imageYSums = imageYSums.map((y) => y / avgIntensityHeight)
-
-    let { outMinimumOffset: minOffsetHeightV, outMinimumDifferenceIntensity: minDiffIntensityHeight } = compareSegments(imageYSums, PREV_HEIGHT_V_IMG_Y_SUMS, ODO_SHIFT_MATCH_VERT, imageYSums.length)
+    let avgYIntensity = subRawImg.sum() / subRawImg.shape[0]
+    let imageYSums = subRawImg.sum(1).div(avgYIntensity)
+    
+    let { minimumOffset: minOffsetHeightV, minimumDifferenceIntensity: minDiffIntensityHeight } = compareSegments({
+        seg1: imageYSums,
+        seg2: odoGlobals.PREV_HEIGHT_V_IMG_Y_SUMS,
+        shiftLength: ODO_SHIFT_MATCH_VERT,
+        compareLengthOfIntensity: imageYSums.length,
+    }) 
 
     if (minOffsetHeightV < 0) {
         minDiffIntensityHeight = -minDiffIntensityHeight
@@ -238,10 +249,3 @@ export function visualOdometry(rawImg, odoGlobals) {
     // Return the results
     return { transV, yawRotV, heightV, sideEffects }
 }
-
-// // Example usage
-// let rawImg = [
-//     /* raw image data (e.g., a 2D array of intensity values) */
-// ]
-// let result = visualOdometry(rawImg)
-// console.log(result)
