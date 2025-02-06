@@ -4,6 +4,7 @@ export PATH="/opt/homebrew/bin/:$PATH"
 
 /Applications/Octave-9.1.app/Contents/Resources/usr/Cellar/octave-octapp@9.1.0/9.1.0/bin/octave \
     --path=./01_conjunctive_pose_cells_network/3d_grid_cells_network/ \
+    --path=./01_conjunctive_pose_cells_network/yaw_height_hdc_network/ \
     --path=./02_multilayered_experience_map/ \
     --path=./03_visual_odometry/ \
     --path=./04_visual_template/ \
