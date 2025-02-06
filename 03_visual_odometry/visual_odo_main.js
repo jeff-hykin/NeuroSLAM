@@ -3,29 +3,13 @@ import { parseCsv } from "../imports.js"
 
 import { visualOdometry } from "./visual_odometry.js"
 import { pathPureName } from "https://deno.land/x/good@1.14.3.0/flattened/path_pure_name.js"
+import { arrayOf } from "../utils/misc.js"
+import { decode } from "../utils/png.js"
+import { toGrayscaleMagnitude } from "../utils/image.js"
 
 // Define the constants
 const DEGREE_TO_RADIAN = Math.PI / 180
 const RADIAN_TO_DEGREE = 180 / Math.PI
-
-// TODO: missing things:
-    // function imread(path) {
-    //     // This function should load an image from the path and return the image data.
-    //     // Use a library like opencv.js or any suitable API to load and process images.
-    //     return new Image(); // Placeholder
-    // }
-
-    // function rgb2gray(image) {
-    //     // Convert the image to grayscale
-    //     // For simplicity, we assume the image is in RGB format.
-    //     // Implement the RGB to grayscale conversion.
-    //     return image; // Placeholder
-    // }
-
-    // function im2double(image) {
-    //     // Normalize the image to [0, 1]
-    //     return image; // Placeholder
-    // }
 
 export function visualOdoMain(visualDataFile, groundTruthFile, odoGlobals) {
     // Getting the visual data information
@@ -85,11 +69,13 @@ export function visualOdoMain(visualDataFile, groundTruthFile, odoGlobals) {
             for (let indexFrame = startFrame; indexFrame < numImgs - 1; indexFrame += odoGlobals.ODO_STEP) {
                 curFrame += 1
 
-                // Read current image
-                let curImg = imread(indexToImagePath[indexFrame])
-                let curGrayImg = rgb2gray(curImg)
-                curGrayImg = im2double(curGrayImg) // 0 to 1 for each pixel
-
+                // Read current image, convert to grayscale, and convert to magnitude
+                let curGrayImg = toGrayscaleMagnitude(
+                    decode(
+                        Deno.readFileSync(indexToImagePath[indexFrame])
+                    )
+                )
+                
                 // Simulating visual odometry (transV, yawRotV, heightV)
                 var { transV, yawRotV, heightV, sideEffects } = visualOdometry(curGrayImg, odoGlobals)
                 // showing what gets changed (sometimes) by visualOdometry
