@@ -1,3 +1,8 @@
+import {
+    TermColorizer,
+    AnsiColors,
+} from "https://esm.sh/gh/jahzielv/deno-term-color/termcolorizer.ts"
+
 export function arrayOf({value, shape}) {
     if (!(value instanceof Function)) {
         value = () => value
@@ -8,4 +13,22 @@ export function arrayOf({value, shape}) {
         output = new Array(nextSize).fill(0).map(() => structuredClone(output))
     }
     return output
+}
+
+const tc = new TermColorizer()
+export const crappyRenderAsAsciiGrayscale = (imgIntentsityTensor)=>{
+    let width = 5
+    const intensity = (value)=> tc.colorize(value=`${value}`.padStart(width," "), {
+        fore: AnsiColors.White,
+        back: [`${value}`, `${value}`, `${value}`].join(", "),
+    })
+    const intensityGap = (value)=> tc.colorize((value=`${value}`.padStart(width," "), "     "), {
+        fore: AnsiColors.White,
+        back: [`${value}`, `${value}`, `${value}`].join(", "),
+    })
+    let as255 = Ops.elementMap(imgIntentsityTensor, each=>Math.round(each*255))
+    for (let each of as255.data) {
+        console.log(each.map(intensityGap).join(""))
+        console.log(each.map(intensity).join(""))
+    }
 }

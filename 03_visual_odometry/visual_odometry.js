@@ -2,28 +2,7 @@
 import { zip } from "../imports.js"
 import { Tensor, Ops } from "../utils/tensor_wrapper.js"
 import { compareSegments } from "./compare_segments.js"
-import {
-    TermColorizer,
-    AnsiColors,
-} from "https://esm.sh/gh/jahzielv/deno-term-color/termcolorizer.ts"
-
-const tc = new TermColorizer()
-const crappyRenderAsAsciiGrayscale = (imgIntentsityTensor)=>{
-    let width = 5
-    const intensity = (value)=> tc.colorize(value=`${value}`.padStart(width," "), {
-        fore: AnsiColors.White,
-        back: [`${value}`, `${value}`, `${value}`].join(", "),
-    })
-    const intensityGap = (value)=> tc.colorize((value=`${value}`.padStart(width," "), "     "), {
-        fore: AnsiColors.White,
-        back: [`${value}`, `${value}`, `${value}`].join(", "),
-    })
-    let as255 = Ops.elementMap(imgIntentsityTensor, each=>Math.round(each*255))
-    for (let each of as255.data) {
-        console.log(each.map(intensityGap).join(""))
-        console.log(each.map(intensity).join(""))
-    }
-}
+import { crappyRenderAsAsciiGrayscale } from "../utils/misc.js"
 
 // NOTE: ths JS version seems to be fully correct!
 export function visualOdometry(rawImg, odoGlobals) {
