@@ -1,4 +1,4 @@
-export function toGrayscaleMagnitude(imgData, {redIndex = 0, greenIndex = 1, blueIndex = 2} = {}) {
+export function toGrayscaleMagnitude(imgData, {redIndex = 0, greenIndex = 1, blueIndex = 2, redWeight= 0.29890, greenWeight= 0.58700, blueWeight= 0.11400, force8BitAccuracy=false} = {}) {
     // imgData example: (output of https://github.com/jeff-hykin/fast-png)
     // {
     //   width: 480,
@@ -32,7 +32,10 @@ export function toGrayscaleMagnitude(imgData, {redIndex = 0, greenIndex = 1, blu
     //   },
     //   resolution: { x: 2835, y: 2835, unit: 1 }
     // }
-    console.debug(`imgData is:`,imgData)
+    const multiplier = 10000 // 10000 is to reduce precision loss when multipling proportions below, without this rgb 255 turns into 0.9999999999999999
+    redWeight = redWeight*multiplier
+    greenWeight = greenWeight*multiplier
+    blueWeight = blueWeight*multiplier
     const { height, width, channels, depth } = imgData
     if (channels !== 1 && channels < 3) {
         throw new Error(`when calling toGrayscale(): the channels must be 1 or >=3, got ${channels}`)
@@ -41,7 +44,11 @@ export function toGrayscaleMagnitude(imgData, {redIndex = 0, greenIndex = 1, blu
     let byteIndex = -rowSize
     let rowIndex = -1
     const rows = []
-    const maxValue = ((2**depth)-1)*10000 // 10000 is to reduce precision loss when multipling proportions below, without this rgb 255 turns into 0.9999999999999999
+    let maxValue = (((2**depth)-1)*multiplier)
+    if (force8BitAccuracy) {
+        maxValue = maxValue/255
+    }
+
     while (++rowIndex < height) {
         byteIndex+=rowSize
         let rowBytes = imgData.data.slice(byteIndex, byteIndex + rowSize)
@@ -53,9 +60,12 @@ export function toGrayscaleMagnitude(imgData, {redIndex = 0, greenIndex = 1, blu
             }
         } else {
             for (let i = 0; i < rowBytes.length; i += channels) {
-                row[++cellIndex] = (2126 * (rowBytes[i+redIndex]) + 7152 * (rowBytes[i+greenIndex]) + 722 * (rowBytes[i+blueIndex]))/maxValue
-                
-                // TODO: could multiply by alpha
+                row[++cellIndex] = (redWeight * (rowBytes[i+redIndex]) + greenWeight * (rowBytes[i+greenIndex]) + blueWeight * (rowBytes[i+blueIndex]))/maxValue
+                // why? this is straight up intentional precision loss
+                // well, turns out thats needed to be identical with matlab and opencv 
+                if (force8BitAccuracy) {
+                    row[cellIndex] = Math.round(row[cellIndex])/255
+                }
             }
         }
         rows.push(row)
