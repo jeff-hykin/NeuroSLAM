@@ -156,10 +156,12 @@ export function visualOdometry(rawImg, odoGlobals) {
     sideEffects.SUB_TRANS_IMG = subRawImg
 
     // Step 2: Compute intensity sum across columns (x-sums)
-
-    let imgXSums = subRawImg.reduce((acc, row) => acc.map((sum, i) => sum + row[i]), Array(subRawImg[0].length).fill(0))
-    let avgIntensity = imgXSums.reduce((sum, val) => sum + val, 0) / imgXSums.length
-    imgXSums = imgXSums.map((x) => x / avgIntensity)
+    let avgIntensity = subRawImg.sum() / subRawImg.shape[1]
+    let imgXSums = subRawImg.sum(0).div(avgIntensity)
+    // console.debug(`subRawImg.sum(0).data.join(" ") is:`,subRawImg.sum(0).data.map(each=>each.toFixed(3)).join(" "))
+    // console.debug(`imgXSums.data.join(" ") is:`,imgXSums.data.map(each=>each.toFixed(3)).join(" "))
+    
+    // NOTE: JS seems to be correct up to this point!
 
     // Step 3: Compare the current image with the previous image
     let { minimumOffset: minOffsetYawRot, minimumDifferenceIntensity: minDiffIntensityRot } = compareSegments({
@@ -168,6 +170,8 @@ export function visualOdometry(rawImg, odoGlobals) {
         shiftLength: ODO_SHIFT_MATCH_HORI,
         compareLengthOfIntensity: imgXSums.length,
     })
+    console.debug(`minOffsetYawRot is:`,minOffsetYawRot)
+    console.debug(`minDiffIntensityRot is:`,minDiffIntensityRot)
 
     sideEffects.OFFSET_YAW_ROT = minOffsetYawRot
     let yawRotV = ODO_YAW_ROT_V_SCALE * minOffsetYawRot * horiDegPerPixel // in degrees
