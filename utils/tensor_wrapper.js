@@ -137,9 +137,9 @@ export class Tensor extends torch.Tensor {
     sum(dim, keepdims=false) {
         if (dim == null) {
             if (this.shape.length == 1) {
-                return super.sum()
+                return super.sum().data[0]
             } else {
-                return this.flatten().sum().data[0]
+                return this.flatten().sum()
             }
         } else {
             return Object.setPrototypeOf(super.sum(dim, keepdims), Tensor.prototype)
