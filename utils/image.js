@@ -45,9 +45,6 @@ export function toGrayscaleMagnitude(imgData, {redIndex = 0, greenIndex = 1, blu
     let rowIndex = -1
     const rows = []
     let maxValue = (((2**depth)-1)*multiplier)
-    if (force8BitAccuracy) {
-        maxValue = maxValue/255
-    }
 
     while (++rowIndex < height) {
         byteIndex+=rowSize
@@ -61,11 +58,6 @@ export function toGrayscaleMagnitude(imgData, {redIndex = 0, greenIndex = 1, blu
         } else {
             for (let i = 0; i < rowBytes.length; i += channels) {
                 row[++cellIndex] = (redWeight * (rowBytes[i+redIndex]) + greenWeight * (rowBytes[i+greenIndex]) + blueWeight * (rowBytes[i+blueIndex]))/maxValue
-                // why? this is straight up intentional precision loss
-                // well, turns out thats needed to be identical with matlab and opencv 
-                if (force8BitAccuracy) {
-                    row[cellIndex] = Math.round(row[cellIndex])/255
-                }
             }
         }
         rows.push(row)
