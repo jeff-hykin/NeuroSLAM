@@ -1,5 +1,4 @@
 import { torch } from "../imports.js"
-import { zipShort as zip } from "https://deno.land/x/good@1.14.2.1/flattened/zip_short.js"
 
 const count = function* (start = 0, end = Infinity, step = 1) {
     let count = start
@@ -16,18 +15,49 @@ const product = (array)=>{
     return result
 }
 
+const toTensor = (tensor)=>{
+    if (!(tensor instanceof Tensor)) {
+        if (tensor instanceof torch.Tensor) {
+            Object.setPrototypeOf(tensor, Tensor.prototype)
+        } else if (tensor instanceof Array) {
+            tensor = new Tensor(tensor)
+        }
+    }
+    return tensor
+}
+const elementMapMutate = (array, fn)=>{
+    if (array[0] instanceof Array) {
+        for (let each of array) {
+            elementMapMutate(each, fn)
+        }
+    } else {
+        var i=-1
+        for (var each of array) {
+            i++
+            array[i] = fn(each)
+        }
+    }
+}
 export const Ops = {
-    ones: (shape)=>Object.setPrototypeOf(torch.ones(shape), TensorWrapper.prototype),
-    zeros: (shape)=>Object.setPrototypeOf(torch.zeros(shape), TensorWrapper.prototype),
-    range: (start, end, {step=1}={}) => new TensorWrapper(Array.from(count(start, end, step))),
-    abs: (tensor)=>Object.setPrototypeOf(tensor.masked_fill(a=>a<=0, 1).masked_fill(a=>a>0, -1).mul(tensor), TensorWrapper.prototype),
-    add: (...values)=>Object.setPrototypeOf(torch.add(...values), TensorWrapper.prototype),
-    subtract: (...values)=>Object.setPrototypeOf(torch.sub(...values), TensorWrapper.prototype),
-    mul: (...values)=>Object.setPrototypeOf(torch.mul(...values), TensorWrapper.prototype),
-    div: (...values)=>Object.setPrototypeOf(torch.div(...values), TensorWrapper.prototype),
-    sum: (...values)=>Object.setPrototypeOf(torch.sum(...values), TensorWrapper.prototype),
-    crossProduct: (...values)=>Object.setPrototypeOf(torch.matmul(...values), TensorWrapper.prototype),
-    randomNormal: (shape)=>Object.setPrototypeOf(torch.randn(shape), TensorWrapper.prototype),
+    elementMap: (tensor, fn)=>{
+        let arrayClone = structuredClone(tensor?.data||tensor)
+        elementMapMutate(arrayClone, fn)
+        return new Tensor(arrayClone)
+    },
+    ones: (shape)=>Object.setPrototypeOf(torch.ones(shape), Tensor.prototype),
+    zeros: (shape)=>Object.setPrototypeOf(torch.zeros(shape), Tensor.prototype),
+    range: (start, end, {step=1}={}) => new Tensor(Array.from(count(start, end, step))),
+    abs: (tensor)=>{
+        tensor = toTensor(tensor)
+        return Ops.elementMap(tensor, a=>Math.abs(a))
+    },
+    add: (...values)=>Object.setPrototypeOf(torch.add(...values), Tensor.prototype),
+    subtract: (...values)=>Object.setPrototypeOf(torch.sub(...values), Tensor.prototype),
+    mul: (...values)=>Object.setPrototypeOf(torch.mul(...values), Tensor.prototype),
+    div: (...values)=>Object.setPrototypeOf(torch.div(...values), Tensor.prototype),
+    sum: (...values)=>Object.setPrototypeOf(torch.sum(...values), Tensor.prototype),
+    crossProduct: (...values)=>Object.setPrototypeOf(torch.matmul(...values), Tensor.prototype),
+    randomNormal: (shape)=>Object.setPrototypeOf(torch.randn(shape), Tensor.prototype),
     // TODO:
         // concat/stack-type stuff
         // slice
@@ -50,7 +80,7 @@ export const Ops = {
     //     for (const each of values) {
     //         newElements.push(...each.tolist())
     //     }
-    //     return new TensorWrapper(newElements)
+    //     return new Tensor(newElements)
     // },
 }
 const recursiveSlice = (data, slices, originalShape) => {
@@ -88,6 +118,9 @@ const recursiveSlice = (data, slices, originalShape) => {
 }
 export class Tensor extends torch.Tensor {
     constructor(...args) {
+        if (args[0] instanceof torch.Tensor) {
+            args[0] = args[0].data
+        }
         super(...args)
     }
 
@@ -95,11 +128,19 @@ export class Tensor extends torch.Tensor {
     // fundamentally changes behavior of method
     // 
     at(...dimensions) {
-        return recursiveSlice(this.data, dimensions, this.shape)
+        let output = recursiveSlice(this.data, dimensions, this.shape)
+        if (output instanceof Array) {
+            output = new Tensor(output)
+        }
+        return output
     }
     sum(dim, keepdims=false) {
         if (dim == null) {
-            return this.flatten().sum().data[0]
+            if (this.shape.length == 1) {
+                return super.sum()
+            } else {
+                return this.flatten().sum().data[0]
+            }
         } else {
             return Object.setPrototypeOf(super.sum(dim, keepdims), Tensor.prototype)
         }
@@ -135,10 +176,12 @@ export class Tensor extends torch.Tensor {
     }
     reshape(newShape) {
         // handle -1 to infer the size
-        for (let index; index < newShape.length; index++) {
-            if (newShape[index] == -1) {
+        var index=-1
+        for (var eachDim of newShape) {
+            index++
+            if (eachDim == -1) {
                 const necessaryProduct = product(this.shape)
-                const currentProduct = product(newShape.splice(index, 1))
+                const currentProduct = product(newShape.toSpliced(index, 1))
                 const missingValue = necessaryProduct / currentProduct
                 if (missingValue <= 0) {
                     throw Error(`Reshape error: cannot reshape ${this.shape} to ${newShape}, the current shape has a product of ${necessaryProduct} and the new shape has a product of ${currentProduct}\nThe -1 would need to be ${missingValue} to make the reshape work, which is not valid`)
@@ -211,9 +254,6 @@ export class Tensor extends torch.Tensor {
     }
     pow(...args) {
         return Object.setPrototypeOf(super.pow(...args), Tensor.prototype)
-    }
-    reshape(...args) {
-        return Object.setPrototypeOf(super.reshape(...args), Tensor.prototype)
     }
     sqrt(...args) {
         return Object.setPrototypeOf(super.sqrt(...args), Tensor.prototype)
