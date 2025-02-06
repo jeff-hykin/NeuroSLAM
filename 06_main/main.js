@@ -14,74 +14,57 @@
     // get_gc_xyz()
     // exp_map_iteration(vt_id, transV, yawRotV, heightV, gcX, gcY, gcZ, curYawTheta, curHeight)
 
-export function main(visualDataFile, groundTruthFile, expMapHistoryFile, odoMapHistoryFile, vtHistoryFile, emHistoryFile, gcTrajFile, hdcTrajFile, ...args) {
+const DEGREE_TO_RADIAN = Math.PI / 180
+const RADIAN_TO_DEGREE = 180 / Math.PI
+export function main({visualDataFile, groundTruthFile, expMapHistoryFile, odoMapHistoryFile, vtHistoryFile, emHistoryFile, gcTrajFile, hdcTrajFile}, input) {
     // Initializing variables
-    const DEGREE_TO_RADIAN = Math.PI / 180
-    const RADIAN_TO_DEGREE = 180 / Math.PI
-    let BLOCK_READ, RENDER_RATE
-
-    let GT_ODO_X_SCALING, GT_ODO_Y_SCALING, GT_ODO_Z_SCALING
-    let GT_EXP_X_SCALING, GT_EXP_Y_SCALING, GT_EXP_Z_SCALING
-    let ODO_MAP_X_SCALING, ODO_MAP_Y_SCALING, ODO_MAP_Z_SCALING
-    let EXP_MAP_X_SCALING, EXP_MAP_Y_SCALING, EXP_MAP_Z_SCALING
-
-    // Process the parameters (arguments)
-    args.forEach((arg, i) => {
-        if (typeof arg === "string") {
-            switch (arg) {
-                case "BLOCK_READ":
-                    BLOCK_READ = args[i + 1]
-                    break
-                case "RENDER_RATE":
-                    RENDER_RATE = args[i + 1]
-                    break
-                case "GT_ODO_X_SCALING":
-                    GT_ODO_X_SCALING = args[i + 1]
-                    break
-                case "GT_ODO_Y_SCALING":
-                    GT_ODO_Y_SCALING = args[i + 1]
-                    break
-                case "GT_ODO_Z_SCALING":
-                    GT_ODO_Z_SCALING = args[i + 1]
-                    break
-                case "GT_EXP_X_SCALING":
-                    GT_EXP_X_SCALING = args[i + 1]
-                    break
-                case "GT_EXP_Y_SCALING":
-                    GT_EXP_Y_SCALING = args[i + 1]
-                    break
-                case "GT_EXP_Z_SCALING":
-                    GT_EXP_Z_SCALING = args[i + 1]
-                    break
-                case "ODO_MAP_X_SCALING":
-                    ODO_MAP_X_SCALING = args[i + 1]
-                    break
-                case "ODO_MAP_Y_SCALING":
-                    ODO_MAP_Y_SCALING = args[i + 1]
-                    break
-                case "ODO_MAP_Z_SCALING":
-                    ODO_MAP_Z_SCALING = args[i + 1]
-                    break
-                case "EXP_MAP_X_SCALING":
-                    EXP_MAP_X_SCALING = args[i + 1]
-                    break
-                case "EXP_MAP_Y_SCALING":
-                    EXP_MAP_Y_SCALING = args[i + 1]
-                    break
-                case "EXP_MAP_Z_SCALING":
-                    EXP_MAP_Z_SCALING = args[i + 1]
-                    break
-            }
-        }
-    })
+    const {
+        BLOCK_READ,
+        RENDER_RATE,
+        GT_ODO_X_SCALING,
+        GT_ODO_Y_SCALING,
+        GT_ODO_Z_SCALING,
+        GT_EXP_X_SCALING,
+        GT_EXP_Y_SCALING,
+        GT_EXP_Z_SCALING,
+        ODO_MAP_X_SCALING,
+        ODO_MAP_Y_SCALING,
+        ODO_MAP_Z_SCALING,
+        EXP_MAP_X_SCALING,
+        EXP_MAP_Y_SCALING,
+        EXP_MAP_Z_SCALING,
+    } = input
 
     // Global Variables Setup
-    let PREV_VT_ID, SUB_VT_IMG, VT_HISTORY, IMG_TYPE, VT_STEP
-    let SUB_HORI_TRANS_IMG, SUB_ROT_IMG, SUB_VERT_TRANS_IMG, SUB_PITCH_IMG, KEY_POINT_SET, ODO_STEP
-    let YAW_HEIGHT_HDC, YAW_HEIGHT_HDC_Y_DIM, YAW_HEIGHT_HDC_H_DIM, YAW_HEIGHT_HDC_Y_TH_SIZE, MAX_ACTIVE_YAW_HEIGHT_HIS_PATH
-    let GRIDCELLS, GC_X_DIM, GC_Y_DIM, GC_Z_DIM, MAX_ACTIVE_XYZ_PATH
-    let EXPERIENCES, EXP_HISTORY, NUM_EXPS, EXP_CORRECTION, EXP_LOOPS
-    let EXP_NODES_LINKS = { nodes: [1], numlinks: [0], linknodes: [[0]] }
+    const mainGlobals = {
+        PREV_VT_ID: null,
+        SUB_VT_IMG: null,
+        VT_HISTORY: null,
+        IMG_TYPE: null,
+        VT_STEP: null,
+        SUB_HORI_TRANS_IMG: null,
+        SUB_ROT_IMG: null,
+        SUB_VERT_TRANS_IMG: null,
+        SUB_PITCH_IMG: null,
+        KEY_POINT_SET: null,
+        ODO_STEP: null,
+        YAW_HEIGHT_HDC: null,
+        YAW_HEIGHT_HDC_Y_DIM: null,
+        YAW_HEIGHT_HDC_H_DIM: null,
+        YAW_HEIGHT_HDC_Y_TH_SIZE: null,
+        MAX_ACTIVE_YAW_HEIGHT_HIS_PATH: null,
+        GRIDCELLS: null,
+        GC_X_DIM: null,
+        GC_Y_DIM: null,
+        GC_Z_DIM: null,
+        MAX_ACTIVE_XYZ_PATH: null,
+        EXPERIENCES: null,
+        EXP_HISTORY: null,
+        NUM_EXPS: null,
+        EXP_CORRECTION: null,
+        EXP_LOOPS: null,
+        EXP_NODES_LINKS: { nodes: [1], numlinks: [0], linknodes: [[0]] },
+    }
 
     // Initialization of other variables
     let curYawTheta = 1,
@@ -98,12 +81,12 @@ export function main(visualDataFile, groundTruthFile, expMapHistoryFile, odoMapH
     let odoMapTrajectory = [[0, 0, 0, 0]]
     let hdcYawTheta = [[0, 0, 0]]
 
-    let groundTruthData = []
-    if (groundTruthFile) {
-        // Assuming load_ground_truth_data is a function that returns data in an array format
-        groundTruthData = load_ground_truth_data(groundTruthFile)
-        gtHasValue = 1
-    }
+    // let groundTruthData = []
+    // if (groundTruthFile) {
+    //     // Assuming load_ground_truth_data is a function that returns data in an array format
+    //     groundTruthData = load_ground_truth_data(groundTruthFile)
+    //     gtHasValue = 1
+    // }
 
     // Fetch image data info
     const [subFoldersPathSet, numSubFolders] = get_images_data_info(visualDataFile)

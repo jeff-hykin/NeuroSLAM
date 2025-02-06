@@ -1,3 +1,4 @@
+#!/usr/bin/env -S deno run --allow-all
 import { FileSystem, glob } from "https://deno.land/x/quickr@0.6.72/main/file_system.js"
 import { Tensor, Ops } from "../../../utils/tensor_wrapper.js"
 
@@ -32,7 +33,9 @@ let odoGlobals = visualOdoInitial({
 const projectPath = `${FileSystem.thisFolder}/../../../`;
 
 await visualOdoMain({
-    dataPath: `${projectPath}/01_NeuroSLAM_Datasets.ignore/02_SynPanData/`, 
+    visualDataFile: `${projectPath}/01_NeuroSLAM_Datasets.ignore/`, 
+    // visualDataFile: `${projectPath}/01_NeuroSLAM_Datasets.ignore/02_SynPanData/`, 
     groundTruthPath: `${projectPath}/02_NeuroSLAM_Groudtruth.ignore/02_SynPanData_GT.txt`,
     odoGlobals,
 })
+console.log(`done`)

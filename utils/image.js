@@ -1,4 +1,4 @@
-function toGrayscaleMagnitude(imgData, {redIndex = 0, greenIndex = 1, blueIndex = 2} = {}) {
+export function toGrayscaleMagnitude(imgData, {redIndex = 0, greenIndex = 1, blueIndex = 2} = {}) {
     // imgData example: (output of https://github.com/jeff-hykin/fast-png)
     // {
     //   width: 480,
@@ -32,6 +32,7 @@ function toGrayscaleMagnitude(imgData, {redIndex = 0, greenIndex = 1, blueIndex 
     //   },
     //   resolution: { x: 2835, y: 2835, unit: 1 }
     // }
+    console.debug(`imgData is:`,imgData)
     const { height, width, channels, depth } = imgData
     if (channels !== 1 && channels < 3) {
         throw new Error(`when calling toGrayscale(): the channels must be 1 or >=3, got ${channels}`)
@@ -59,5 +60,7 @@ function toGrayscaleMagnitude(imgData, {redIndex = 0, greenIndex = 1, blueIndex 
         }
         rows.push(row)
     }
+    rows.height = height
+    rows.width = width
     return rows
 }

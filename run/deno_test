@@ -1,0 +1,1 @@
+/usr/bin/env -S deno run --allow-all "/Users/jeffhykin/repos/NeuroSLAM/07_test/test_aidvo/SynPanData/test_vo_ov_SynPanData.js"

@@ -28,7 +28,16 @@ export function visualOdometry(rawImg, odoGlobals) {
     let sideEffects
 
     // Step 1: Compute horizontal rotational velocity (yaw)
-    let subRawImg = rawImg.slice(ODO_IMG_YAW_ROT_Y_RANGE[0], ODO_IMG_YAW_ROT_Y_RANGE[1], ODO_IMG_YAW_ROT_X_RANGE[0], ODO_IMG_YAW_ROT_X_RANGE[1])
+    console.debug(`rawImg.height is:`,rawImg.height)
+    console.debug(`rawImg.width is:`,rawImg.width)
+    console.debug(`rawImg is:`,rawImg.length)
+    console.debug(`rawImg is:`,rawImg[0].length)
+    console.debug(`ODO_IMG_YAW_ROT_Y_RANGE is:`,ODO_IMG_YAW_ROT_Y_RANGE)
+    console.debug(`ODO_IMG_YAW_ROT_X_RANGE is:`,ODO_IMG_YAW_ROT_X_RANGE)
+    // TODO: I'm not sure why the +1 is needed in the y range, but not in the x range -- Jeff
+    let subRawImg = rawImg.slice(ODO_IMG_YAW_ROT_Y_RANGE[0], ODO_IMG_YAW_ROT_Y_RANGE[1]+1).map(row => row.slice(ODO_IMG_YAW_ROT_X_RANGE[0], ODO_IMG_YAW_ROT_X_RANGE[1]))
+    console.debug(`subRawImg is:`,subRawImg.length)
+    console.debug(`subRawImg is:`,subRawImg[0].length)
     subRawImg = Image.resize(subRawImg, ODO_IMG_YAW_ROT_RESIZE_RANGE)
     let horiDegPerPixel = FOV_HORI_DEGREE / subRawImg[1].length
 

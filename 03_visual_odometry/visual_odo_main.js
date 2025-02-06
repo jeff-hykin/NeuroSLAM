@@ -11,7 +11,7 @@ import { toGrayscaleMagnitude } from "../utils/image.js"
 const DEGREE_TO_RADIAN = Math.PI / 180
 const RADIAN_TO_DEGREE = 180 / Math.PI
 
-export function visualOdoMain(visualDataFile, groundTruthFile, odoGlobals) {
+export function visualOdoMain({visualDataFile, groundTruthFile, odoGlobals}) {
     // Getting the visual data information
     const paths = FileSystem.sync.listFolderPathsIn(visualDataFile)
 
@@ -46,6 +46,9 @@ export function visualOdoMain(visualDataFile, groundTruthFile, odoGlobals) {
 
     // Processing visual odometry
     for (let eachPath of paths) {
+        // FIXME: this is mimics the hack needed to get the matlab code to run, but it should be refactored
+        eachPath = `./01_NeuroSLAM_Datasets.ignore/02_SynPanData/`
+
         // Get all image files in the current subfolder
         let filePaths = FileSystem.sync.listPathsIn(eachPath)
         let imgFilesPathList = filePaths.filter((each) => each.endsWith(".png"))
@@ -59,7 +62,7 @@ export function visualOdoMain(visualDataFile, groundTruthFile, odoGlobals) {
         const indexToImagePath = Object.fromEntries(imgFilesPathList.map(
             eachPath => [
                 // key
-                pathPureName(eachPath),
+                parseInt(pathPureName(eachPath)),
                 // value
                 eachPath
             ]
@@ -68,11 +71,12 @@ export function visualOdoMain(visualDataFile, groundTruthFile, odoGlobals) {
         if (numImgs > 0) {
             for (let indexFrame = startFrame; indexFrame < numImgs - 1; indexFrame += odoGlobals.ODO_STEP) {
                 curFrame += 1
-
+                const imagePath = indexToImagePath[indexFrame]
                 // Read current image, convert to grayscale, and convert to magnitude
+                let img
                 let curGrayImg = toGrayscaleMagnitude(
                     decode(
-                        Deno.readFileSync(indexToImagePath[indexFrame])
+                        Deno.readFileSync(imagePath)
                     )
                 )
                 
