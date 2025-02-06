@@ -1,4 +1,8 @@
+let cache = new Map()
 export function gcInitial(input) {
+    if (cache.has(input)) {
+        return cache.get(input)
+    }
     // inputs:
         // input.GC_X_DIM,
         // input.GC_Y_DIM,
@@ -84,13 +88,15 @@ export function gcInitial(input) {
     // The path of maximum active XYZ coordinates
     let MAX_ACTIVE_XYZ_PATH = [gcX, gcY, gcZ]
 
-    return {
+    let output = {
         GRIDCELLS,
         MAX_ACTIVE_XYZ_PATH,
         gcInitialPosition: [gcX, gcY, gcZ],
         ...input,
         ...generatedOutputs,
     }
+    cache.set(input, output)
+    return output
 }
 
 // internal helper
