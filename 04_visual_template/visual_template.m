@@ -204,3 +204,10 @@ function [vt_id] = visual_template(rawImg, x, y,z, yaw, height)
     VT_HISTORY = [VT_HISTORY; vt_id];
 
 end
+% outputs:
+    % VT
+    % MIN_DIFF_CURR_IMG_VTS
+    % DIFFS_ALL_IMGS_VTS
+    % VT_HISTORY_FIRST
+    % SUB_VT_IMG
+    % VT_HISTORY
