@@ -1,7 +1,7 @@
 import { FileSystem } from "../imports.js"
 import { parseCsv } from "../imports.js"
 
-import { visualOdometry } from "./visual_odometry.js"
+import { visualOdometry } from "./02_visual_odometry.js"
 import { pathPureName } from "https://deno.land/x/good@1.14.3.0/flattened/path_pure_name.js"
 import { arrayOf } from "../utils/misc.js"
 import { decode } from "../utils/png.js"
