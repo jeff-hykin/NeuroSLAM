@@ -3,9 +3,10 @@ import {
     AnsiColors,
 } from "https://esm.sh/gh/jahzielv/deno-term-color/termcolorizer.ts"
 
-export function arrayOf({value, shape}) {
+export function arrayOf({value=0, shape}) {
     if (!(value instanceof Function)) {
-        value = () => value
+        let originalValue = value
+        value = () => originalValue
     }
     let output = new Array(shape.pop()).fill(0).map((_, i) => value(i))
     while (shape.length > 0) {
