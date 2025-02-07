@@ -3,7 +3,7 @@ import {
     AnsiColors,
 } from "https://esm.sh/gh/jahzielv/deno-term-color/termcolorizer.ts"
 
-export function arrayOf({value=0, shape}) {
+export function arrayOf({value=null, shape}) {
     if (!(value instanceof Function)) {
         let originalValue = value
         value = () => originalValue

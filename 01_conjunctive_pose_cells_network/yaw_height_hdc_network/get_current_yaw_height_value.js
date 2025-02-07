@@ -1,3 +1,6 @@
+// 
+// summary: I believe this function looks at the "neurons" of the HDC, and converts them into azimuth ("yaw") and pitch ("height") values.
+// 
 export function getCurrentYawHeightValue(yawGlobals) {
     // Returns the approximate averaged center of the most active activity packet.
     // This implementation averages the cells around the maximally activated cell.

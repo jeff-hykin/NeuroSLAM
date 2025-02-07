@@ -1,3 +1,4 @@
+// TODO: needs testing, and needs rewriting with tensors
 export function yawHeightHdcIteration(vtId, yawRotV, heightV, yawGlobals) {
     // Pose cell update steps:
     // 1. Add view template energy
