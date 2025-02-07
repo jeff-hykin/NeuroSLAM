@@ -170,7 +170,7 @@ export function visualTemplate(rawImg, x, y, z, yaw, height, vtGlobals) {
 
             // Find the template with the smallest difference
             let minDiff = Math.min(...MIN_DIFF_CURR_IMG_VTS)
-            let diffId = MIN_DIFF_CURR_IMG_VTS.indexOf(minDiff)
+            let idOfVtWithMinDiff = MIN_DIFF_CURR_IMG_VTS.indexOf(minDiff)
             DIFFS_ALL_IMGS_VTS.push(minDiff)
         
         // 
@@ -179,12 +179,16 @@ export function visualTemplate(rawImg, x, y, z, yaw, height, vtGlobals) {
             if (minDiff > VT_MATCH_THRESHOLD) {
                 vtId = addVisualTemplate(normVtImg)
             } else {
-                // If match found, update the existing template and decay its energy
-                vtId = diffId
-                VT[vtId].decay += VT_ACTIVE_DECAY
-                if (PREV_VT_ID !== vtId) {
-                    VT[vtId].first = 0 // Flag indicating that energy can be injected
+                const vtWithMinDiff = VT[idOfVtWithMinDiff]
+                
+                // NOTE: this is different than updateDecay()
+                //       I'm not sure why its different --Jeff
+                vtWithMinDiff.decay += VT_ACTIVE_DECAY
+                // TODO: I don't understand this check, but it seems important
+                if (PREV_VT_ID !== idOfVtWithMinDiff) {
+                    vtWithMinDiff.first = 0 // Flag indicating that energy can be injected
                 }
+                vtId = idOfVtWithMinDiff
                 VT_HISTORY_OLD.push(vtId)
             }
         // 
