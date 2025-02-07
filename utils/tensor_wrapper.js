@@ -148,9 +148,9 @@ export class Tensor extends torch.Tensor {
     mean(dim, keepdims=false) {
         if (dim == null) {
             if (this.shape.length == 1) {
-                return super.mean()
+                return super.mean().data[0]
             } else {
-                return this.flatten().mean().data[0]
+                return this.flatten().mean()
             }
         } else {
             return Object.setPrototypeOf(super.mean(dim, keepdims), Tensor.prototype)
@@ -159,12 +159,23 @@ export class Tensor extends torch.Tensor {
     variance(dim, keepdims=false) {
         if (dim == null) {
             if (this.shape.length == 1) {
-                return super.variance()
+                return super.variance().data[0]
             } else {
-                return this.flatten().variance().data[0]
+                return this.flatten().variance()
             }
         } else {
             return Object.setPrototypeOf(super.variance(dim, keepdims), Tensor.prototype)
+        }
+    }
+    stdev(dim, keepdims=false) {
+        if (dim == null) {
+            if (this.shape.length == 1) {
+                return super.variance().sqrt().data[0]
+            } else {
+                return this.flatten().stdev()
+            }
+        } else {
+            return Object.setPrototypeOf(super.variance(dim, keepdims).sqrt(), Tensor.prototype)
         }
     }
     

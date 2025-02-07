@@ -1,5 +1,5 @@
-// export { torch } from "https://esm.sh/gh/jeff-hykin/esm-pytorch@v0.7.2.1/src/index.ts"
-export { torch } from "/Users/jeffhykin/repos/esm-pytorch/src/index.ts"
+export { torch } from "https://esm.sh/gh/jeff-hykin/esm-pytorch@v0.7.2.1/src/index.ts"
+// export { torch } from "/Users/jeffhykin/repos/esm-pytorch/src/index.ts"
 export { FileSystem, glob } from "https://deno.land/x/quickr@0.7.1/main/file_system.js"
 // export { FileSystem, glob } from "/Users/jeffhykin/repos/quickr/main/file_system.js"
 export { zip, enumerate, count, permute, combinations, wrapAroundGet } from "https://deno.land/x/good@1.14.2.1/array.js"
