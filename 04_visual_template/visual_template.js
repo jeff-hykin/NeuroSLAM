@@ -7,51 +7,54 @@ import { vtCompareSegments } from "./03_vt_compare_segments.js"
 const maxNumVisualTemplatesIThink = 5 // hardcoded in the original code
 // TODO: rename var after confirming its the max number
 export function visualTemplate(rawImg, x, y, z, yaw, height, vtGlobals) {
-    // unmodified global inputs
-    const { 
-        NUM_VT, 
-        PREV_VT_ID, 
-        VT_IMG_CROP_Y_RANGE, 
-        VT_IMG_CROP_X_RANGE, 
-        VT_IMG_X_SHIFT, 
-        VT_IMG_Y_SHIFT, 
-        VT_IMG_HALF_OFFSET, 
-        VT_MATCH_THRESHOLD, 
-        VT_GLOBAL_DECAY, 
-        VT_ACTIVE_DECAY, 
-        PATCH_SIZE_Y_K, 
-        PATCH_SIZE_X_K, 
-        VT_IMG_RESIZE_X_RANGE, 
-        VT_IMG_RESIZE_Y_RANGE, 
-        VT_PANORAMIC,
-    } = vtGlobals
-    
-    // mutated (returned) global values
-    var {
-        VT, 
-        MIN_DIFF_CURR_IMG_VTS, 
-        DIFFS_ALL_IMGS_VTS,
-        VT_HISTORY,
-        VT_HISTORY_FIRST,
-        VT_HISTORY_OLD 
-    } = vtGlobals
+    // 
+    // init
+    // 
+        // unmodified global inputs
+        const { 
+            NUM_VT, 
+            PREV_VT_ID, 
+            VT_IMG_CROP_Y_RANGE, 
+            VT_IMG_CROP_X_RANGE, 
+            VT_IMG_X_SHIFT, 
+            VT_IMG_Y_SHIFT, 
+            VT_IMG_HALF_OFFSET, 
+            VT_MATCH_THRESHOLD, 
+            VT_GLOBAL_DECAY, 
+            VT_ACTIVE_DECAY, 
+            PATCH_SIZE_Y_K, 
+            PATCH_SIZE_X_K, 
+            VT_IMG_RESIZE_X_RANGE, 
+            VT_IMG_RESIZE_Y_RANGE, 
+            VT_PANORAMIC,
+        } = vtGlobals
+        
+        // mutated (returned) global values
+        var {
+            VT, 
+            MIN_DIFF_CURR_IMG_VTS, 
+            DIFFS_ALL_IMGS_VTS,
+            VT_HISTORY,
+            VT_HISTORY_FIRST,
+            VT_HISTORY_OLD 
+        } = vtGlobals
 
-    let minOffsetY = []
-    let minOffsetX = []
-    
-    // helper
-    function updateDecay(visualTemplateEntry) {
-        visualTemplateEntry.decay -= VT_GLOBAL_DECAY
-        if (visualTemplateEntry.decay < 0) {
-            visualTemplateEntry.decay = 0
+        // helper
+        function updateDecay(visualTemplateEntry) {
+            visualTemplateEntry.decay -= VT_GLOBAL_DECAY
+            if (visualTemplateEntry.decay < 0) {
+                visualTemplateEntry.decay = 0
+            }
         }
-    }
-
-    // Resize the raw image with constraint range
-    const compensatedRange = [VT_IMG_CROP_Y_RANGE[0], VT_IMG_CROP_Y_RANGE[1]+1]
-    let subImg = rawImgTensor.at(compensatedRange.map(each=>each-1), VT_IMG_CROP_X_RANGE.map(each=>each-1))
-    // FIXME: VT_IMG_RESIZE_Y_RANGE, VT_IMG_RESIZE_X_RANGE are currently ignored (as to avoid needing to find/make a image resizing function)
-    let vtResizedImg = subImg // resizeImage(subImg, VT_IMG_RESIZE_Y_RANGE, VT_IMG_RESIZE_X_RANGE)
+    
+    // 
+    // grab image
+    // 
+        // Resize the raw image with constraint range
+        const compensatedRange = [VT_IMG_CROP_Y_RANGE[0], VT_IMG_CROP_Y_RANGE[1]+1]
+        let subImg = rawImgTensor.at(compensatedRange.map(each=>each-1), VT_IMG_CROP_X_RANGE.map(each=>each-1))
+        // FIXME: VT_IMG_RESIZE_Y_RANGE, VT_IMG_RESIZE_X_RANGE are currently ignored (as to avoid needing to find/make a image resizing function)
+        let vtResizedImg = subImg // resizeImage(subImg, VT_IMG_RESIZE_Y_RANGE, VT_IMG_RESIZE_X_RANGE)
     
     // 
     // calcuate SUB_VT_IMG
@@ -103,17 +106,16 @@ export function visualTemplate(rawImg, x, y, z, yaw, height, vtGlobals) {
     // 
     let vtId
     if (NUM_VT < maxNumVisualTemplatesIThink) {
-        // 
-        // Decay the nearest template's energy level and ensure it's not below 0
-        // 
-        updateDecay(VT[NUM_VT])
+        let nearestTemplate = VT[NUM_VT]
+        updateDecay(nearestTemplate)
         
         // 
         // Add new template to the VT array
         // 
         NUM_VT++
-        VT[NUM_VT] = {
-            id: NUM_VT,
+        vtId = NUM_VT
+        VT[vtId] = {
+            id: vtId,
             template: normVtImg,
             decay: VT_ACTIVE_DECAY,
             gc_x: x,
@@ -125,32 +127,39 @@ export function visualTemplate(rawImg, x, y, z, yaw, height, vtGlobals) {
             numExp: 0,
             exps: [],
         }
-        vtId = NUM_VT
         VT_HISTORY_FIRST.push(vtId)
+    // 
+    // If there are already existing templates, compare the new template to the old ones
+    // 
     } else {
-        // If there are already existing templates, compare the new template to the old ones
-        
+        let minOffsetY = []
+        let minOffsetX = []
+
         var k=0 // NOTE: this is effectively starting at i=1 (the second element)
         for (var eachTemplate of VT.slice(1)) {
             k++
             
             updateDecay(eachTemplate)
             
+            // Compare the current image with each template in the history
             let { offsetY: minOffsetYIter, offsetX: minOffsetXIter, sdif: minDiffIter } = vtCompareSegments({
                 seg1: normVtImg, 
-                seg2: VT[k].template, 
+                seg2: eachTemplate.template, 
                 vtPanoramic: VT_PANORAMIC, 
                 halfOffsetRange: VT_IMG_HALF_OFFSET, 
                 slenY: VT_IMG_Y_SHIFT, 
                 slenX: VT_IMG_X_SHIFT, 
                 cwlY: normVtImg.length, 
-                cwlX: normVtImg[0].lengt,
+                cwlX: normVtImg[0].length,
             })
+
+            // Store the computed offsets and minimum difference for this comparison
             minOffsetY[k] = minOffsetYIter
             minOffsetX[k] = minOffsetXIter
             MIN_DIFF_CURR_IMG_VTS[k] = minDiffIter
         }
 
+        // Find the template with the smallest difference
         let minDiff = Math.min(...MIN_DIFF_CURR_IMG_VTS)
         let diffId = MIN_DIFF_CURR_IMG_VTS.indexOf(minDiff)
         DIFFS_ALL_IMGS_VTS.push(minDiff)
