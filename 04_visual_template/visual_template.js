@@ -20,7 +20,7 @@ export function visualTemplate(rawImg, x, y, z, yaw, height, vtGlobals) {
             VT_MATCH_THRESHOLD, // the minimum value, below this a specific vt will be replaced 
             VT_GLOBAL_DECAY, 
             VT_ACTIVE_DECAY, 
-            PATCH_SIZE_Y_K, 
+            PATCH_SIZE_Y_K, // typical value is 5
             PATCH_SIZE_X_K, 
             VT_IMG_RESIZE_X_RANGE, 
             VT_IMG_RESIZE_Y_RANGE, 
@@ -83,27 +83,29 @@ export function visualTemplate(rawImg, x, y, z, yaw, height, vtGlobals) {
         let ySizeVtImg = VT_IMG_RESIZE_Y_RANGE // scalar
         let xSizeVtImg = VT_IMG_RESIZE_X_RANGE // scalar
         let ySizeNormImg = ySizeVtImg
-
-        // Define a temp variable for patch normalization
-        const extVtImg = Ops.zeros([
-            ySizeVtImg + PATCH_SIZE_Y_K - 1,
-            xSizeVtImg + PATCH_SIZE_X_K - 1,
-        ])
         
-        // Perform patch extension for better normalization
-        const patchHeightHalf = Math.floor((PATCH_SIZE_Y_K + 1) / 2)
-        const patchWidthHalf = Math.floor((PATCH_SIZE_X_K + 1) / 2)
-        // Extend the image boundaries to fit the patch size
-        for (let v = patchHeightHalf; v < ySizeNormImg + patchHeightHalf; v++) {
-            for (let u = patchWidthHalf; u < xSizeVtImg + patchWidthHalf; u++) {
-                extVtImg.data[v][u] = vtResizedImg.data[v - patchHeightHalf][u - patchWidthHalf]
+        // 
+        // add a border to the image (for convolution-like kernels)
+        // 
+            const extVtImg = Ops.zeros([
+                ySizeVtImg + PATCH_SIZE_Y_K - 1,
+                xSizeVtImg + PATCH_SIZE_X_K - 1,
+            ])
+            
+            // Perform patch extension for better normalization
+            const patchHeightHalf = Math.floor((PATCH_SIZE_Y_K + 1) / 2)
+            const patchWidthHalf = Math.floor((PATCH_SIZE_X_K + 1) / 2)
+            // Extend the image boundaries to fit the patch size
+            for (let v = patchHeightHalf; v < ySizeNormImg + patchHeightHalf; v++) {
+                for (let u = patchWidthHalf; u < xSizeVtImg + patchWidthHalf; u++) {
+                    extVtImg.data[v][u] = vtResizedImg.data[v - patchHeightHalf][u - patchWidthHalf]
+                }
             }
-        }
-        // matlab code reference:
-        // extVtImg(
-        //     fix((PATCH_SIZE_Y_K + 1 )/2) : fix((PATCH_SIZE_Y_K + 1 )/2) + ySizeNormImg - 1,
-        //     fix((PATCH_SIZE_X_K + 1 )/2) : fix((PATCH_SIZE_X_K + 1 )/2) + xSizeVtImg - 1
-        // ) = vtResizedImg;
+            // matlab code reference:
+            // extVtImg(
+            //     fix((PATCH_SIZE_Y_K + 1 )/2) : fix((PATCH_SIZE_Y_K + 1 )/2) + ySizeNormImg - 1,
+            //     fix((PATCH_SIZE_X_K + 1 )/2) : fix((PATCH_SIZE_X_K + 1 )/2) + xSizeVtImg - 1
+            // ) = vtResizedImg;
 
         // Normalize the image patches by subtracting the mean and dividing by the standard deviation
         let normVtImg = []
@@ -112,13 +114,13 @@ export function visualTemplate(rawImg, x, y, z, yaw, height, vtGlobals) {
             for (let u = 0; u < xSizeVtImg; u++) {
                 // Extract the patch from the extended image
                 // matlab code reference: patchImg = extVtImg(v : v + PATCH_SIZE_Y_K - 1, u : u + PATCH_SIZE_X_K -1);        
-                const patchImg = extVtImg.at(
+                const patch = extVtImg.at(
                     [v, v + PATCH_SIZE_Y_K],
                     [u, u + PATCH_SIZE_X_K]
                 )
                 
-                const meanPatchImg = patchImg.flatten().mean()
-                const stdPatchImg = patchImg.flatten().stdev()
+                const meanPatchImg = patch.flatten().mean()
+                const stdPatchImg = patch.flatten().stdev()
                 // Normalize the pixel value for the current position (v, u)
                 normVtImg[v][u] = (vtResizedImg.data[v][u] - meanPatchImg) / (stdPatchImg * 255)
                 // commented out matlab code reference:
@@ -126,6 +128,7 @@ export function visualTemplate(rawImg, x, y, z, yaw, height, vtGlobals) {
                 //     % normVtImg(v,u) =  PATCH_SIZE_Y_K * PATCH_SIZE_X_K * (vtResizedImg(v,u) - meanPatchImg ) / stdPatchIMG ;
             }
         }
+        // kernel thats minus the mean, divided by the standard deviation... why does that work? -- Jeff
 
         // update: SUB_VT_IMG
         SUB_VT_IMG = new Tensor(normVtImg)

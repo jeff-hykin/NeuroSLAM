@@ -1,24 +1,50 @@
-export function vtCompareSegments({ seg1, seg2, vtPanoramic, halfOffsetRange, slenY, slenX, cwlY, cwlX }) {
-    let mindiff = 1e7
-    let minoffsetX = 0
-    let minoffsetY = 0
+import { Tensor, Ops } from "../utils/tensor_wrapper.js"
+import { circShift } from "../utils/misc.js"
+
+export function vtCompareSegments({ seg1, seg2, vtPanoramic, halfOffsetRange, slenY, slenX }) {
+    // explaination:
+    //     seg1 is the current image (matrix)
+    //     seg2 is the template image (matrix)
+    //     this function returns the offset and the difference between the two images
+    const height = seg1.length
+    const width = seg1[0].length
+    
+    let minDiff = 1e7
+    let minOffsetX = 0
+    let minOffsetY = 0
 
     // Compare two 1 row * N column matrices
     // For each offset, sum the absolute difference between the two segments
 
-    if (vtPanoramic === 1) {
+    if (vtPanoramic === 1) { // true for SynPanData, false for other datasets
+        // halfOffsetRange.length == 2 (start, end)
         for (let halfOffset of halfOffsetRange) {
             // Circular shift seg2 by halfOffset in the X direction
-            seg2 = circshift(seg2, [0, halfOffset])
+            seg2 = circShift(seg2, [0, halfOffset])
 
             // First comparison loop for shifting seg1 and seg2
             for (let offsetY = 0; offsetY <= slenY; offsetY++) {
                 for (let offsetX = 0; offsetX <= slenX; offsetX++) {
-                    let cdiff = absDiff(seg1, seg2, offsetY, offsetX, cwlY, cwlX)
-                    if (cdiff < mindiff) {
-                        mindiff = cdiff
-                        minoffsetX = offsetX
-                        minoffsetY = offsetY
+                    const seg1Slice = seg1.at(
+                        [offsetY, height], // TODO: probably an off-by-one error somewhere here -- Jeff
+                        [offsetX, width], // TODO: probably an off-by-one error somewhere here -- Jeff
+                    )
+                    const seg2Slice = seg2.at(
+                        [0, height - offsetY], // TODO: probably an off-by-one error somewhere here -- Jeff
+                        [0, width - offsetX], // TODO: probably an off-by-one error somewhere here -- Jeff
+                    )
+                    const difference = seg1Slice.subtract(seg2Slice)
+                    const cDiff = Ops.abs(difference)
+                    // matlab code reference:
+                    //     cdiff = abs(
+                    //         seg1(1 + offsetY : height , 1 + offsetX : width)
+                    //         - seg2(1 : height - offsetY, 1 : width - offsetX)
+                    //     );
+
+                    if (cDiff < minDiff) {
+                        minDiff = cDiff
+                        minOffsetX = offsetX
+                        minOffsetY = offsetY
                     }
                 }
             }
@@ -26,11 +52,11 @@ export function vtCompareSegments({ seg1, seg2, vtPanoramic, halfOffsetRange, sl
             // Second comparison loop for shifting seg1 and seg2 (in reverse)
             for (let offsetY = 1; offsetY <= slenY; offsetY++) {
                 for (let offsetX = 1; offsetX <= slenX; offsetX++) {
-                    let cdiff = absDiff(seg1, seg2, -offsetY, -offsetX, cwlY, cwlX)
-                    if (cdiff < mindiff) {
-                        mindiff = cdiff
-                        minoffsetX = -offsetX
-                        minoffsetY = -offsetY
+                    let cDiff = absDiff(seg1, seg2, -offsetY, -offsetX, height, width)
+                    if (cDiff < minDiff) {
+                        minDiff = cDiff
+                        minOffsetX = -offsetX
+                        minOffsetY = -offsetY
                     }
                 }
             }
@@ -39,11 +65,11 @@ export function vtCompareSegments({ seg1, seg2, vtPanoramic, halfOffsetRange, sl
         // Standard comparison loop without panoramic flag
         for (let offsetY = 0; offsetY <= slenY; offsetY++) {
             for (let offsetX = 0; offsetX <= slenX; offsetX++) {
-                let cdiff = absDiff(seg1, seg2, offsetY, offsetX, cwlY, cwlX)
-                if (cdiff < mindiff) {
-                    mindiff = cdiff
-                    minoffsetX = offsetX
-                    minoffsetY = offsetY
+                let cDiff = absDiff(seg1, seg2, offsetY, offsetX, height, width)
+                if (cDiff < minDiff) {
+                    minDiff = cDiff
+                    minOffsetX = offsetX
+                    minOffsetY = offsetY
                 }
             }
         }
@@ -51,24 +77,24 @@ export function vtCompareSegments({ seg1, seg2, vtPanoramic, halfOffsetRange, sl
         // Reverse comparison loop
         for (let offsetY = 1; offsetY <= slenY; offsetY++) {
             for (let offsetX = 1; offsetX <= slenX; offsetX++) {
-                let cdiff = absDiff(seg1, seg2, -offsetY, -offsetX, cwlY, cwlX)
-                if (cdiff < mindiff) {
-                    mindiff = cdiff
-                    minoffsetX = -offsetX
-                    minoffsetY = -offsetY
+                let cDiff = absDiff(seg1, seg2, -offsetY, -offsetX, height, width)
+                if (cDiff < minDiff) {
+                    minDiff = cDiff
+                    minOffsetX = -offsetX
+                    minOffsetY = -offsetY
                 }
             }
         }
     }
 
-    return { offsetY: minoffsetY, offsetX: minoffsetX, sdif: mindiff }
+    return { offsetY: minOffsetY, offsetX: minOffsetX, sdif: minDiff }
 }
 
 // Helper function to calculate absolute difference
-function absDiff(seg1, seg2, offsetY, offsetX, cwlY, cwlX) {
+function absDiff(seg1, seg2, offsetY, offsetX, height, width) {
     let diffSum = 0
-    let height = cwlY - offsetY
-    let width = cwlX - offsetX
+    let height = height - offsetY
+    let width = width - offsetX
 
     for (let i = 0; i < height; i++) {
         for (let j = 0; j < width; j++) {
@@ -79,15 +105,4 @@ function absDiff(seg1, seg2, offsetY, offsetX, cwlY, cwlX) {
 
     // Normalize by the area size
     return diffSum / (height * width)
-}
-
-// Helper function for circular shift (similar to MATLAB's circshift)
-function circshift(arr, shift) {
-    let shiftedArr = arr.map((row) => [...row]) // Deep copy of the 2D array
-
-    for (let i = 0; i < arr.length; i++) {
-        // Shift rows by the specified amount
-        shiftedArr[i] = shiftedArr[i].slice(shift[1]).concat(shiftedArr[i].slice(0, shift[1]))
-    }
-    return shiftedArr
 }
