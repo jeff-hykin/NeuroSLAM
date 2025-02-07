@@ -23,6 +23,35 @@ function [vt_id] = visual_template(rawImg, x, y,z, yaw, height)
 % 
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    %% data flow
+        % mutations:
+        %     VT
+        %     MIN_DIFF_CURR_IMG_VTS
+        %     DIFFS_ALL_IMGS_VTS
+        %     VT_HISTORY
+        %     VT_HISTORY_FIRST
+        %     VT_HISTORY_OLD
+
+        % outputs:
+        %     SUB_VT_IMG
+
+        % inputs:
+        %     NUM_VT
+        %     PREV_VT_ID
+        %     VT_IMG_CROP_Y_RANGE
+        %     VT_IMG_CROP_X_RANGE
+        %     VT_IMG_X_SHIFT
+        %     VT_IMG_Y_SHIFT
+        %     VT_IMG_HALF_OFFSET
+        %     VT_MATCH_THRESHOLD
+        %     VT_GLOBAL_DECAY
+        %     VT_ACTIVE_DECAY
+        %     PATCH_SIZE_Y_K
+        %     PATCH_SIZE_X_K
+        %     VT_IMG_RESIZE_X_RANGE
+        %     VT_IMG_RESIZE_Y_RANGE
+        %     VT_PANORAMIC
     
     %% start to define some variables for visual template
     
@@ -204,10 +233,3 @@ function [vt_id] = visual_template(rawImg, x, y,z, yaw, height)
     VT_HISTORY = [VT_HISTORY; vt_id];
 
 end
-% outputs:
-    % VT
-    % MIN_DIFF_CURR_IMG_VTS
-    % DIFFS_ALL_IMGS_VTS
-    % VT_HISTORY_FIRST
-    % SUB_VT_IMG
-    % VT_HISTORY
