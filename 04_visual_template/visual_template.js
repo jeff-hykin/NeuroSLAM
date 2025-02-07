@@ -85,21 +85,18 @@ export function visualTemplate(rawImg, x, y, z, yaw, height, vtGlobals) {
         let ySizeNormImg = ySizeVtImg
 
         // Define a temp variable for patch normalization
-        let extVtImg = arrayOf({
-            value: 0,
-            shape: [
-                ySizeVtImg + PATCH_SIZE_Y_K - 1,
-                xSizeVtImg + PATCH_SIZE_X_K - 1,
-            ]
-        })
-
+        const extVtImg = Ops.zeros([
+            ySizeVtImg + PATCH_SIZE_Y_K - 1,
+            xSizeVtImg + PATCH_SIZE_X_K - 1,
+        ])
+        
         // Perform patch extension for better normalization
         const patchHeightHalf = Math.floor((PATCH_SIZE_Y_K + 1) / 2)
         const patchWidthHalf = Math.floor((PATCH_SIZE_X_K + 1) / 2)
         // Extend the image boundaries to fit the patch size
         for (let v = patchHeightHalf; v < ySizeNormImg + patchHeightHalf; v++) {
             for (let u = patchWidthHalf; u < xSizeVtImg + patchWidthHalf; u++) {
-                extVtImg[v][u] = vtResizedImg[v - patchHeightHalf][u - patchWidthHalf]
+                extVtImg.data[v][u] = vtResizedImg.data[v - patchHeightHalf][u - patchWidthHalf]
             }
         }
         // matlab code reference:
@@ -114,13 +111,16 @@ export function visualTemplate(rawImg, x, y, z, yaw, height, vtGlobals) {
             normVtImg[v] = []
             for (let u = 0; u < xSizeVtImg; u++) {
                 // Extract the patch from the extended image
-                let patchImg = _extractPatch(extVtImg, v, u, PATCH_SIZE_Y_K, PATCH_SIZE_X_K)
                 // matlab code reference: patchImg = extVtImg(v : v + PATCH_SIZE_Y_K - 1, u : u + PATCH_SIZE_X_K -1);        
+                const patchImg = extVtImg.at(
+                    [v, v + PATCH_SIZE_Y_K],
+                    [u, u + PATCH_SIZE_X_K]
+                )
                 
-                let meanPatchImg = mean2(patchImg)
-                let stdPatchImg = std2(patchImg)
+                const meanPatchImg = patchImg.flatten().mean()
+                const stdPatchImg = patchImg.flatten().stdev()
                 // Normalize the pixel value for the current position (v, u)
-                normVtImg[v][u] = (vtResizedImg[v][u] - meanPatchImg) / (stdPatchImg * 255)
+                normVtImg[v][u] = (vtResizedImg.data[v][u] - meanPatchImg) / (stdPatchImg * 255)
                 // commented out matlab code reference:
                 //     % normVtImg(v,u) = 11 * 11 * (vtResizedImg(v,u) - meanPatchImg ) / stdPatchIMG ;
                 //     % normVtImg(v,u) =  PATCH_SIZE_Y_K * PATCH_SIZE_X_K * (vtResizedImg(v,u) - meanPatchImg ) / stdPatchIMG ;
@@ -128,7 +128,7 @@ export function visualTemplate(rawImg, x, y, z, yaw, height, vtGlobals) {
         }
 
         // update: SUB_VT_IMG
-        SUB_VT_IMG = normVtImg
+        SUB_VT_IMG = new Tensor(normVtImg)
     
     // 
     // create a new template if the number of templates is really small
@@ -219,26 +219,4 @@ export function visualTemplate(rawImg, x, y, z, yaw, height, vtGlobals) {
         VT_HISTORY,
         VT_HISTORY_OLD,
     }
-}
-
-// calculates the mean of a 2D array
-function mean2(matrix) {
-    let sum = matrix.flat().reduce((a, b) => a + b, 0)
-    return sum / matrix.flat().length
-}
-
-// calculate the standard deviation of a 2D array
-function std2(matrix) {
-    let meanVal = mean2(matrix)
-    let squaredDiffs = matrix.flat().map((val) => Math.pow(val - meanVal, 2))
-    let meanSquaredDiff = squaredDiffs.reduce((a, b) => a + b, 0) / squaredDiffs.length
-    return Math.sqrt(meanSquaredDiff)
-}
-
-function _extractPatch(image, v, u, patchHeight, patchWidth) {
-    let patch = []
-    for (let i = v; i < v + patchHeight; i++) {
-        patch.push(image[i].slice(u, u + patchWidth))
-    }
-    return patch
 }
