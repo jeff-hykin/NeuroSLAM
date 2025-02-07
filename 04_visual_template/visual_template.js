@@ -1,10 +1,10 @@
 import { zip } from "../imports.js"
 import { Tensor, Ops } from "../utils/tensor_wrapper.js"
-import { crappyRenderAsAsciiGrayscale } from "../utils/misc.js"
+import { arrayOf, crappyRenderAsAsciiGrayscale } from "../utils/misc.js"
 
 import { vtCompareSegments } from "./03_vt_compare_segments.js"
 
-function visualTemplate(rawImg, x, y, z, yaw, height, vtGlobals) {
+export function visualTemplate(rawImg, x, y, z, yaw, height, vtGlobals) {
     const { 
         NUM_VT, 
         PREV_VT_ID, 
@@ -34,26 +34,28 @@ function visualTemplate(rawImg, x, y, z, yaw, height, vtGlobals) {
 
     let vtId
     let SUB_VT_IMG
+    let minOffsetY = []
+    let minOffsetX = []
 
     // Resize the raw image with constraint range
-    const compensatedRange = [ODO_IMG_YAW_ROT_Y_RANGE[0], ODO_IMG_YAW_ROT_Y_RANGE[1]+1]
-    let subRawImg = rawImgTensor.at(compensatedRange.map(each=>each-1), ODO_IMG_YAW_ROT_X_RANGE.map(each=>each-1))
+    const compensatedRange = [VT_IMG_CROP_Y_RANGE[0], VT_IMG_CROP_Y_RANGE[1]+1]
+    let subImg = rawImgTensor.at(compensatedRange.map(each=>each-1), VT_IMG_CROP_X_RANGE.map(each=>each-1))
+    // FIXME: VT_IMG_RESIZE_Y_RANGE, VT_IMG_RESIZE_X_RANGE are currently ignored (as to avoid needing to find/make a image resizing function)
+    let vtResizedImg = subImg // resizeImage(subImg, VT_IMG_RESIZE_Y_RANGE, VT_IMG_RESIZE_X_RANGE)
 
-    let subImg = rawImg.slice(
-        VT_IMG_CROP_Y_RANGE[0], VT_IMG_CROP_Y_RANGE[1]
-    ).map(
-        (row) => row.slice(VT_IMG_CROP_X_RANGE[0], VT_IMG_CROP_X_RANGE[1])
-    )
-    let vtResizedImg = resizeImage(subImg, VT_IMG_RESIZE_Y_RANGE, VT_IMG_RESIZE_X_RANGE)
 
     let ySizeVtImg = VT_IMG_RESIZE_Y_RANGE
     let xSizeVtImg = VT_IMG_RESIZE_X_RANGE
     let ySizeNormImg = ySizeVtImg
 
     // Define a temp variable for patch normalization
-    let extVtImg = Array(ySizeVtImg + PATCH_SIZE_Y_K - 1)
-        .fill()
-        .map(() => Array(xSizeVtImg + PATCH_SIZE_X_K - 1).fill(0))
+    let extVtImg = arrayOf({
+        value: 0,
+        shape: [
+            ySizeVtImg + PATCH_SIZE_Y_K - 1,
+            xSizeVtImg + PATCH_SIZE_X_K - 1,
+        ]
+    })
     for (let v = Math.floor((PATCH_SIZE_Y_K + 1) / 2); v < ySizeNormImg + Math.floor((PATCH_SIZE_Y_K + 1) / 2); v++) {
         for (let u = Math.floor((PATCH_SIZE_X_K + 1) / 2); u < xSizeVtImg + Math.floor((PATCH_SIZE_X_K + 1) / 2); u++) {
             extVtImg[v][u] = vtResizedImg[v - Math.floor((PATCH_SIZE_Y_K + 1) / 2)][u - Math.floor((PATCH_SIZE_X_K + 1) / 2)]
@@ -104,10 +106,19 @@ function visualTemplate(rawImg, x, y, z, yaw, height, vtGlobals) {
                 VT[k].decay = 0
             }
 
-            let result = vtCompareSegments(normVtImg, VT[k].template, VT_PANORAMIC, VT_IMG_HALF_OFFSET, VT_IMG_Y_SHIFT, VT_IMG_X_SHIFT, normVtImg.length, normVtImg[0].length)
-            let minOffsetY = result[0]
-            let minOffsetX = result[1]
-            MIN_DIFF_CURR_IMG_VTS[k] = result[2]
+            let { offsetY: minOffsetYIter, offsetX: minOffsetXIter, sdif: minDiffIter } = vtCompareSegments({
+                seg1: normVtImg, 
+                seg2: VT[k].template, 
+                vtPanoramic: VT_PANORAMIC, 
+                halfOffsetRange: VT_IMG_HALF_OFFSET, 
+                slenY: VT_IMG_Y_SHIFT, 
+                slenX: VT_IMG_X_SHIFT, 
+                cwlY: normVtImg.length, 
+                cwlX: normVtImg[0].lengt,
+            })
+            minOffsetY[k] = minOffsetYIter
+            minOffsetX[k] = minOffsetXIter
+            MIN_DIFF_CURR_IMG_VTS[k] = minDiffIter
         }
 
         let minDiff = Math.min(...MIN_DIFF_CURR_IMG_VTS)
@@ -142,15 +153,8 @@ function visualTemplate(rawImg, x, y, z, yaw, height, vtGlobals) {
     }
 
     VT_HISTORY.push(vtId)
-
-    return [vtId, VT, MIN_DIFF_CURR_IMG_VTS, DIFFS_ALL_IMGS_VTS, SUB_VT_IMG, VT_HISTORY_FIRST, VT_HISTORY, VT_HISTORY_OLD]
-}
-
-// Helper Functions
-function resizeImage(image, newHeight, newWidth) {
-    // Implement resizing logic using a library like opencv.js or any other image processing library
-    // This is a placeholder, adjust accordingly
-    return image // Example: just return the image (you should implement resizing logic)
+    
+    return {vtId, VT, MIN_DIFF_CURR_IMG_VTS, DIFFS_ALL_IMGS_VTS, SUB_VT_IMG, VT_HISTORY_FIRST, VT_HISTORY, VT_HISTORY_OLD}
 }
 
 function mean2(matrix) {
