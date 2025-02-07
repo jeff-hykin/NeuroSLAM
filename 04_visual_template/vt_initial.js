@@ -1,6 +1,7 @@
 // const [curYawTheta, curPitchTheta] = getHdcInitialTheta() // FIXME: uh, the getHdcInitialTheta() (or anything similar) doesnt exist in the matlab...
 import { curYawTheta, curPitchTheta, } from './yaw_height_hdc_network/hdc_inital_stuff.js'
 import { gcInitial } from '../01_conjunctive_pose_cells_network/3d_grid_cells_network/gc_initial.js'
+import { arrayOf } from '../utils/misc.js'
 
 export function vtInitial(imgType, arg, gcInitalInput) {
     const { gcInitialPosition: { gcX, gcY, gcZ } } = gcInital(gcInitalInput)
@@ -9,7 +10,7 @@ export function vtInitial(imgType, arg, gcInitalInput) {
         VT: [
             {
                 id: 1,
-                template: [1], // Initialize template with one element as 1
+                template: [1],
                 decay: 0.7,
                 gc_x: gcX,
                 gc_y: gcY,
@@ -23,7 +24,10 @@ export function vtInitial(imgType, arg, gcInitalInput) {
                         id: 1,
                     },
                 ],
-                template: Array.from({ length: arg.VT_IMG_RESIZE_Y_RANGE }, () => new Array(arg.VT_IMG_RESIZE_X_RANGE).fill(0)),
+                template: arrayOf({
+                    shape: [ arg.VT_IMG_RESIZE_Y_RANGE, arg.VT_IMG_RESIZE_X_RANGE ],
+                    value: 0,
+                }),
             }
         ],
         VT_IMG_HALF_OFFSET: [0, Math.floor(arg.VT_IMG_CROP_X_RANGE / 2)],
