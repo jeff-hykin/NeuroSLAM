@@ -26,6 +26,7 @@ function [vt_id] = visual_template(rawImg, x, y,z, yaw, height)
 
     %% data flow
         % mutations:
+        %     NUM_VT
         %     VT
         %     MIN_DIFF_CURR_IMG_VTS
         %     DIFFS_ALL_IMGS_VTS
@@ -37,7 +38,6 @@ function [vt_id] = visual_template(rawImg, x, y,z, yaw, height)
         %     SUB_VT_IMG
 
         % inputs:
-        %     NUM_VT
         %     PREV_VT_ID
         %     VT_IMG_CROP_Y_RANGE
         %     VT_IMG_CROP_X_RANGE
