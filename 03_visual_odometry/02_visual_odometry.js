@@ -1,8 +1,9 @@
 // Assuming js-pytorch and other necessary functions are available
 import { zip } from "../imports.js"
 import { Tensor, Ops } from "../utils/tensor_wrapper.js"
-import { compareSegments } from "./compare_segments.js"
 import { crappyRenderAsAsciiGrayscale } from "../utils/misc.js"
+
+import { compareSegments } from "./03_compare_segments.js"
 
 // NOTE: ths JS version seems to be fully correct!
 export function visualOdometry(rawImg, odoGlobals) {
