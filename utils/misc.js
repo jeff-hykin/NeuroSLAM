@@ -33,3 +33,44 @@ export const crappyRenderAsAsciiGrayscale = (imgIntentsityTensor)=>{
         console.log(each.map(intensity).join(""))
     }
 }
+
+function _circShiftInner(arr, shift) {
+    let newData = arr
+    let shiftAmount = shift[0]
+    shiftAmount = shiftAmount % arr.length
+    if (shiftAmount != 0) {
+        let firstHalf = arr.slice(0, shiftAmount)
+        let secondHalf = arr.slice(shiftAmount)
+        newData = secondHalf.concat(firstHalf)
+    }
+    if (shift.length != 1) {
+        const remaining = shift.slice(1)
+        return newData.map(each=>_circShiftInner(each, remaining))
+    }
+    return newData
+}
+export function circShift(tensor, shift) {
+    // 
+    // standardize shift arg
+    // 
+        if (!(shift instanceof Array)) {
+            shift = [shift,]
+        }
+        let missingDimensions = shift.length - tensor.shape.length
+        if (missingDimensions < 0) {
+            // try to shed extra dims
+            while (shift.at(-1) == 0) {
+                shift.pop()
+            }
+            missingDimensions = shift.length - tensor.shape.length
+            if (missingDimensions < 0) {
+                throw new Error(`circShift was called on a tensor of shape ${tensor.shape}, but too many shift values were provided: ${shift}`)
+            }
+        }
+    // 
+    // perform shift
+    //
+    return new Tensor(
+        _circShiftInner(tensor.data, shift)
+    )
+}
