@@ -1,6 +1,14 @@
 import { Tensor, Ops } from "../utils/tensor_wrapper.js"
 import { circShift } from "../utils/misc.js"
 
+// summary:
+//     I believe this is supposed to find the offsets that minimize the differences between the two images
+//     and then report how large of a mismatch there is (with the best offset)
+//     however, I'm not sure this truly finding the best offset
+//     its almost certainly not finding it optimally/quickly
+//     the panoramic flag is very confusing, I don't understand why the halfOffset helps
+//     and I don't see how this is biologically based, unless there's a way to map this to a convolutional network
+//     maybe its also kind of a way to bypass a lack of a foveation system, by simply foveating over everything
 export function vtCompareSegments({ seg1, seg2, vtPanoramic, halfOffsetRange, slenY, slenX }) {
     // explaination:
     //     seg1 is the current image (matrix)
