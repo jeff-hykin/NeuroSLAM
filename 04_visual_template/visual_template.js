@@ -80,8 +80,8 @@ export function visualTemplate(rawImg, x, y, z, yaw, height, vtGlobals) {
     // 
         let SUB_VT_IMG
 
-        let ySizeVtImg = VT_IMG_RESIZE_Y_RANGE
-        let xSizeVtImg = VT_IMG_RESIZE_X_RANGE
+        let ySizeVtImg = VT_IMG_RESIZE_Y_RANGE // scalar
+        let xSizeVtImg = VT_IMG_RESIZE_X_RANGE // scalar
         let ySizeNormImg = ySizeVtImg
 
         // Define a temp variable for patch normalization
@@ -102,6 +102,11 @@ export function visualTemplate(rawImg, x, y, z, yaw, height, vtGlobals) {
                 extVtImg[v][u] = vtResizedImg[v - patchHeightHalf][u - patchWidthHalf]
             }
         }
+        // matlab code reference:
+        // extVtImg(
+        //     fix((PATCH_SIZE_Y_K + 1 )/2) : fix((PATCH_SIZE_Y_K + 1 )/2) + ySizeNormImg - 1,
+        //     fix((PATCH_SIZE_X_K + 1 )/2) : fix((PATCH_SIZE_X_K + 1 )/2) + xSizeVtImg - 1
+        // ) = vtResizedImg;
 
         // Normalize the image patches by subtracting the mean and dividing by the standard deviation
         let normVtImg = []
@@ -110,10 +115,15 @@ export function visualTemplate(rawImg, x, y, z, yaw, height, vtGlobals) {
             for (let u = 0; u < xSizeVtImg; u++) {
                 // Extract the patch from the extended image
                 let patchImg = _extractPatch(extVtImg, v, u, PATCH_SIZE_Y_K, PATCH_SIZE_X_K)
+                // matlab code reference: patchImg = extVtImg(v : v + PATCH_SIZE_Y_K - 1, u : u + PATCH_SIZE_X_K -1);        
+                
                 let meanPatchImg = mean2(patchImg)
                 let stdPatchImg = std2(patchImg)
                 // Normalize the pixel value for the current position (v, u)
                 normVtImg[v][u] = (vtResizedImg[v][u] - meanPatchImg) / (stdPatchImg * 255)
+                // commented out matlab code reference:
+                //     % normVtImg(v,u) = 11 * 11 * (vtResizedImg(v,u) - meanPatchImg ) / stdPatchIMG ;
+                //     % normVtImg(v,u) =  PATCH_SIZE_Y_K * PATCH_SIZE_X_K * (vtResizedImg(v,u) - meanPatchImg ) / stdPatchIMG ;
             }
         }
 
