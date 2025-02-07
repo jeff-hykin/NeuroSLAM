@@ -4,22 +4,20 @@ import { arrayOf, crappyRenderAsAsciiGrayscale } from "../utils/misc.js"
 
 import { vtCompareSegments } from "./03_vt_compare_segments.js"
 
-const maxNumVisualTemplatesIThink = 5 // hardcoded in the original code
-// TODO: rename var after confirming its the max number
+const simpleVisualTemplateThreshold = 5 // hardcoded in the original code
 export function visualTemplate(rawImg, x, y, z, yaw, height, vtGlobals) {
     // 
     // init
     // 
         // unmodified global inputs
         const { 
-            NUM_VT, 
             PREV_VT_ID, 
             VT_IMG_CROP_Y_RANGE, 
             VT_IMG_CROP_X_RANGE, 
             VT_IMG_X_SHIFT, 
             VT_IMG_Y_SHIFT, 
             VT_IMG_HALF_OFFSET, 
-            VT_MATCH_THRESHOLD, 
+            VT_MATCH_THRESHOLD, // the minimum value, below this a specific vt will be replaced 
             VT_GLOBAL_DECAY, 
             VT_ACTIVE_DECAY, 
             PATCH_SIZE_Y_K, 
@@ -31,6 +29,7 @@ export function visualTemplate(rawImg, x, y, z, yaw, height, vtGlobals) {
         
         // mutated (returned) global values
         var {
+            NUM_VT,
             VT, 
             MIN_DIFF_CURR_IMG_VTS, 
             DIFFS_ALL_IMGS_VTS,
@@ -45,6 +44,26 @@ export function visualTemplate(rawImg, x, y, z, yaw, height, vtGlobals) {
             if (visualTemplateEntry.decay < 0) {
                 visualTemplateEntry.decay = 0
             }
+        }
+
+        function addVisualTemplate(image) {
+            NUM_VT++
+            const newTemplate = {
+                id: NUM_VT,
+                template: image,
+                decay: VT_ACTIVE_DECAY,
+                gc_x: x,
+                gc_y: y,
+                gc_z: z,
+                hdc_yaw: yaw,
+                hdc_height: height,
+                first: 1, // Don't inject energy as the vt is being created
+                numExp: 0,
+                exps: [],
+            }
+            VT[newTemplate.id] = newTemplate
+            VT_HISTORY_FIRST.push(newTemplate.id)
+            return newTemplate.id
         }
     
     // 
@@ -102,105 +121,99 @@ export function visualTemplate(rawImg, x, y, z, yaw, height, vtGlobals) {
         SUB_VT_IMG = normVtImg
     
     // 
-    // create a new template if the number of templates is small
+    // create a new template if the number of templates is really small
     // 
     let vtId
-    if (NUM_VT < maxNumVisualTemplatesIThink) {
+    if (NUM_VT < simpleVisualTemplateThreshold) {
         let nearestTemplate = VT[NUM_VT]
         updateDecay(nearestTemplate)
         
-        // 
-        // Add new template to the VT array
-        // 
-        NUM_VT++
-        vtId = NUM_VT
-        VT[vtId] = {
-            id: vtId,
-            template: normVtImg,
-            decay: VT_ACTIVE_DECAY,
-            gc_x: x,
-            gc_y: y,
-            gc_z: z,
-            hdc_yaw: yaw,
-            hdc_height: height,
-            first: 1, // Don't inject energy as the vt is being created
-            numExp: 0,
-            exps: [],
-        }
-        VT_HISTORY_FIRST.push(vtId)
+        // Add new template, record the id
+        vtId = addVisualTemplate(normVtImg)
     // 
-    // If there are already existing templates, compare the new template to the old ones
+    // check if an existing vt needs replacing, or if we should add a vt
     // 
     } else {
-        let minOffsetY = []
-        let minOffsetX = []
-
-        var k=0 // NOTE: this is effectively starting at i=1 (the second element)
-        for (var eachTemplate of VT.slice(1)) {
-            k++
-            
-            updateDecay(eachTemplate)
-            
-            // Compare the current image with each template in the history
-            let { offsetY: minOffsetYIter, offsetX: minOffsetXIter, sdif: minDiffIter } = vtCompareSegments({
-                seg1: normVtImg, 
-                seg2: eachTemplate.template, 
-                vtPanoramic: VT_PANORAMIC, 
-                halfOffsetRange: VT_IMG_HALF_OFFSET, 
-                slenY: VT_IMG_Y_SHIFT, 
-                slenX: VT_IMG_X_SHIFT, 
-                cwlY: normVtImg.length, 
-                cwlX: normVtImg[0].length,
-            })
-
-            // Store the computed offsets and minimum difference for this comparison
-            minOffsetY[k] = minOffsetYIter
-            minOffsetX[k] = minOffsetXIter
-            MIN_DIFF_CURR_IMG_VTS[k] = minDiffIter
-        }
-
-        // Find the template with the smallest difference
-        let minDiff = Math.min(...MIN_DIFF_CURR_IMG_VTS)
-        let diffId = MIN_DIFF_CURR_IMG_VTS.indexOf(minDiff)
-        DIFFS_ALL_IMGS_VTS.push(minDiff)
-
-        if (minDiff > VT_MATCH_THRESHOLD) {
-            NUM_VT++
-            VT[NUM_VT] = {
-                id: NUM_VT,
-                template: normVtImg,
-                decay: VT_ACTIVE_DECAY,
-                gc_x: x,
-                gc_y: y,
-                gc_z: z,
-                hdc_yaw: yaw,
-                hdc_height: height,
-                first: 1, // Don't inject energy as the vt is being created
-                numExp: 0,
-                exps: [],
+        // 
+        // update decays for all templates
+        // 
+            const templatesMinusFirst = VT.slice(1)
+            for (var eachTemplate of templatesMinusFirst) {
+                updateDecay(eachTemplate)
             }
-            vtId = NUM_VT
-            VT_HISTORY_FIRST.push(vtId)
-        } else {
-            vtId = diffId
-            VT[vtId].decay += VT_ACTIVE_DECAY
-            if (PREV_VT_ID !== vtId) {
-                VT[vtId].first = 0
+        
+        // 
+        // compute score for each template
+        // 
+            let minOffsetY = []
+            let minOffsetX = []
+            let k = 0//NOTE: this is effectively starting at i=1 (the second element) because of templatesMinusFirst
+            for (var eachTemplate of templatesMinusFirst) {
+                k++
+                // Compare the current image with each template in the history
+                let { offsetY: minOffsetYIter, offsetX: minOffsetXIter, sdif: minDiffIter } = vtCompareSegments({
+                    seg1: normVtImg, 
+                    seg2: eachTemplate.template, 
+                    vtPanoramic: VT_PANORAMIC, 
+                    halfOffsetRange: VT_IMG_HALF_OFFSET, 
+                    slenY: VT_IMG_Y_SHIFT, 
+                    slenX: VT_IMG_X_SHIFT, 
+                    cwlY: normVtImg.length, 
+                    cwlX: normVtImg[0].length,
+                })
+
+                // Store the computed offsets and minimum difference for this comparison
+                minOffsetY[k] = minOffsetYIter
+                minOffsetX[k] = minOffsetXIter
+                MIN_DIFF_CURR_IMG_VTS[k] = minDiffIter
             }
-            VT_HISTORY_OLD.push(vtId)
-        }
+
+            // Find the template with the smallest difference
+            let minDiff = Math.min(...MIN_DIFF_CURR_IMG_VTS)
+            let diffId = MIN_DIFF_CURR_IMG_VTS.indexOf(minDiff)
+            DIFFS_ALL_IMGS_VTS.push(minDiff)
+        
+        // 
+        // decide: either replace or add a vt
+        // 
+            if (minDiff > VT_MATCH_THRESHOLD) {
+                vtId = addVisualTemplate(normVtImg)
+            } else {
+                // If match found, update the existing template and decay its energy
+                vtId = diffId
+                VT[vtId].decay += VT_ACTIVE_DECAY
+                if (PREV_VT_ID !== vtId) {
+                    VT[vtId].first = 0 // Flag indicating that energy can be injected
+                }
+                VT_HISTORY_OLD.push(vtId)
+            }
+        // 
     }
 
+    // Record the updated template history
     VT_HISTORY.push(vtId)
     
-    return {vtId, VT, MIN_DIFF_CURR_IMG_VTS, DIFFS_ALL_IMGS_VTS, SUB_VT_IMG, VT_HISTORY_FIRST, VT_HISTORY, VT_HISTORY_OLD}
+    // Return all the updated state variables
+    return {
+        vtId,
+        VT,
+        NUM_VT,
+        MIN_DIFF_CURR_IMG_VTS, // seems to only be used for display/debugging
+        DIFFS_ALL_IMGS_VTS,
+        SUB_VT_IMG,
+        VT_HISTORY_FIRST,
+        VT_HISTORY,
+        VT_HISTORY_OLD,
+    }
 }
 
+// calculates the mean of a 2D array
 function mean2(matrix) {
     let sum = matrix.flat().reduce((a, b) => a + b, 0)
     return sum / matrix.flat().length
 }
 
+// calculate the standard deviation of a 2D array
 function std2(matrix) {
     let meanVal = mean2(matrix)
     let squaredDiffs = matrix.flat().map((val) => Math.pow(val - meanVal, 2))
