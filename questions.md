@@ -7,3 +7,9 @@
     - While uncertain about the vt_compare_segments internals, especially the panoramic flag, it seems to be a brute force approach to matching the visual template sub image somewhere in the current image
     - the VT_IMG_Y_SHIFT (=5) and VT_IMG_X_SHIFT (=3) are the maximum offset, so its not that much
     - then its just abs-diff in pixels
+- # How do the head direction cells work?
+    - `yaw_height_hdc_iteration()` is the important function
+    - it has two input sources: landmark memory, and vestibular input (bio-accelerometer)
+        - the landmark memory is called "visual templates" in the code. It finds the singular most-similar visual template and that adds "energy" to a specific head direction neuron
+        - the vestibular input is simulated with the "visual odometry" in the code. It provides azimuth and pitch, but for some reason they call it yaw and height
+- # How does the experience map work?
