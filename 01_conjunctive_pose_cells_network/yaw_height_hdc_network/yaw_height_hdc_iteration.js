@@ -33,7 +33,7 @@ export function yawHeightHdcIteration(vtId, yawRotV, heightV, yawGlobals) {
         YAW_HEIGHT_HDC_H_SIZE, // radian e.g. 2*pi/360 = 0.0175
         VT, // The visual templete
     } = yawGlobals
-    // this is normally a 
+    // this is normally a 36x36 matrix
     let headDirectionCells = structuredClone(YAW_HEIGHT_HDC)
 
     // Step 1: Add view template energy
