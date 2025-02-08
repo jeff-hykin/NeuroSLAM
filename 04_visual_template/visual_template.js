@@ -5,7 +5,18 @@ import { arrayOf, crappyRenderAsAsciiGrayscale } from "../utils/misc.js"
 import { vtCompareSegments } from "./03_vt_compare_segments.js"
 
 const simpleVisualTemplateThreshold = 5 // hardcoded in the original code
-export function visualTemplate(rawImg, x, y, z, yaw, height, vtGlobals) {
+// summary:
+//     crop/resize the image
+//     create a normalized version of it with a kernel (avg of 5x5 patch, divided by standard deviation of the patch)
+//     either create a new template immediately (in the VT array)
+//     or it will 
+//          decay all the existing templates
+//          compare each of them with the cropped-normalized-image
+//          if, for each, at some relatively slight offset, the difference is minimized, get the difference
+//          the one with the smallest difference is evaluated
+//          if its good enough, its added ... as a new visual template?
+//          if its not good enough, the closest-one is decayed and made the active visual template
+export function visualTemplate(rawImg, x, y, z, azimuth, pitch, vtGlobals) {
     // 
     // init
     // 
@@ -55,8 +66,8 @@ export function visualTemplate(rawImg, x, y, z, yaw, height, vtGlobals) {
                 gc_x: x,
                 gc_y: y,
                 gc_z: z,
-                hdc_yaw: yaw,
-                hdc_height: height,
+                hdc_yaw: azimuth,
+                hdc_height: pitch,
                 first: 1, // Don't inject energy as the vt is being created
                 numExp: 0,
                 exps: [],
@@ -71,7 +82,10 @@ export function visualTemplate(rawImg, x, y, z, yaw, height, vtGlobals) {
     // 
         // Resize the raw image with constraint range
         const compensatedRange = [VT_IMG_CROP_Y_RANGE[0], VT_IMG_CROP_Y_RANGE[1]+1]
-        let subImg = rawImgTensor.at(compensatedRange.map(each=>each-1), VT_IMG_CROP_X_RANGE.map(each=>each-1))
+        let subImg = rawImg.at(
+            compensatedRange.map(each=>each-1),
+            VT_IMG_CROP_X_RANGE.map(each=>each-1)
+        )
         // FIXME: VT_IMG_RESIZE_Y_RANGE, VT_IMG_RESIZE_X_RANGE are currently ignored (as to avoid needing to find/make a image resizing function)
         let vtResizedImg = subImg // resizeImage(subImg, VT_IMG_RESIZE_Y_RANGE, VT_IMG_RESIZE_X_RANGE)
     
@@ -169,10 +183,8 @@ export function visualTemplate(rawImg, x, y, z, yaw, height, vtGlobals) {
                     seg2: eachTemplate.template, 
                     vtPanoramic: VT_PANORAMIC, 
                     halfOffsetRange: VT_IMG_HALF_OFFSET, 
-                    slenY: VT_IMG_Y_SHIFT, 
-                    slenX: VT_IMG_X_SHIFT, 
-                    cwlY: normVtImg.length, 
-                    cwlX: normVtImg[0].length,
+                    maxYOffset: VT_IMG_Y_SHIFT, 
+                    maxXOffset: VT_IMG_X_SHIFT, 
                 })
 
                 // Store the computed offsets and minimum difference for this comparison
@@ -189,7 +201,8 @@ export function visualTemplate(rawImg, x, y, z, yaw, height, vtGlobals) {
         // 
         // decide: either replace or add a vt
         // 
-            if (minDiff > VT_MATCH_THRESHOLD) {
+            const templateMatchedCurrentImage = minDiff > VT_MATCH_THRESHOLD
+            if (templateMatchedCurrentImage) {
                 vtId = addVisualTemplate(normVtImg)
             } else {
                 const vtWithMinDiff = VT[idOfVtWithMinDiff]

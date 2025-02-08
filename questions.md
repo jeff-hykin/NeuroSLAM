@@ -1,0 +1,9 @@
+- ### how are visual templates generated?
+    - At a certain time:
+        - the active image gets cropped
+        - a simple kernel is applied to the image (mean of 5x5 patch, divided by standard deviation)
+        - thats it... that becomes/is the visual template
+- ### how are visual templates compared (for that threshold that causes them to be replaced)?
+    - While uncertain about the vt_compare_segments internals, especially the panoramic flag, it seems to be a brute force approach to matching the visual template sub image somewhere in the current image
+    - the VT_IMG_Y_SHIFT (=5) and VT_IMG_X_SHIFT (=3) are the maximum offset, so its not that much
+    - then its just abs-diff in pixels

@@ -9,7 +9,7 @@ import { circShift } from "../utils/misc.js"
 //     the panoramic flag is very confusing, I don't understand why the halfOffset helps
 //     and I don't see how this is biologically based, unless there's a way to map this to a convolutional network
 //     maybe its also kind of a way to bypass a lack of a foveation system, by simply foveating over everything
-export function vtCompareSegments({ seg1, seg2, vtPanoramic, halfOffsetRange, slenY, slenX }) {
+export function vtCompareSegments({ seg1, seg2, vtPanoramic, halfOffsetRange, maxYOffset, maxXOffset }) {
     // explaination:
     //     seg1 is the current image (matrix)
     //     seg2 is the template image (matrix)
@@ -31,8 +31,8 @@ export function vtCompareSegments({ seg1, seg2, vtPanoramic, halfOffsetRange, sl
             seg2 = circShift(seg2, [0, halfOffset])
 
             // First comparison loop for shifting seg1 and seg2
-            for (let offsetY = 0; offsetY <= slenY; offsetY++) {
-                for (let offsetX = 0; offsetX <= slenX; offsetX++) {
+            for (let offsetY = 0; offsetY <= maxYOffset; offsetY++) {
+                for (let offsetX = 0; offsetX <= maxXOffset; offsetX++) {
                     const seg1Slice = seg1.at(
                         [offsetY, height], // TODO: probably an off-by-one error somewhere here -- Jeff
                         [offsetX, width], // TODO: probably an off-by-one error somewhere here -- Jeff
@@ -58,8 +58,8 @@ export function vtCompareSegments({ seg1, seg2, vtPanoramic, halfOffsetRange, sl
             }
 
             // Second comparison loop for shifting seg1 and seg2 (in reverse)
-            for (let offsetY = 1; offsetY <= slenY; offsetY++) {
-                for (let offsetX = 1; offsetX <= slenX; offsetX++) {
+            for (let offsetY = 1; offsetY <= maxYOffset; offsetY++) {
+                for (let offsetX = 1; offsetX <= maxXOffset; offsetX++) {
                     let cDiff = absDiff(seg1, seg2, -offsetY, -offsetX, height, width)
                     if (cDiff < minDiff) {
                         minDiff = cDiff
@@ -71,8 +71,8 @@ export function vtCompareSegments({ seg1, seg2, vtPanoramic, halfOffsetRange, sl
         }
     } else {
         // Standard comparison loop without panoramic flag
-        for (let offsetY = 0; offsetY <= slenY; offsetY++) {
-            for (let offsetX = 0; offsetX <= slenX; offsetX++) {
+        for (let offsetY = 0; offsetY <= maxYOffset; offsetY++) {
+            for (let offsetX = 0; offsetX <= maxXOffset; offsetX++) {
                 let cDiff = absDiff(seg1, seg2, offsetY, offsetX, height, width)
                 if (cDiff < minDiff) {
                     minDiff = cDiff
@@ -83,8 +83,8 @@ export function vtCompareSegments({ seg1, seg2, vtPanoramic, halfOffsetRange, sl
         }
 
         // Reverse comparison loop
-        for (let offsetY = 1; offsetY <= slenY; offsetY++) {
-            for (let offsetX = 1; offsetX <= slenX; offsetX++) {
+        for (let offsetY = 1; offsetY <= maxYOffset; offsetY++) {
+            for (let offsetX = 1; offsetX <= maxXOffset; offsetX++) {
                 let cDiff = absDiff(seg1, seg2, -offsetY, -offsetX, height, width)
                 if (cDiff < minDiff) {
                     minDiff = cDiff

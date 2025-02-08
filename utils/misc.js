@@ -74,3 +74,7 @@ export function circShift(tensor, shift) {
         _circShiftInner(tensor.data, shift)
     )
 }
+
+export function clamp(value, {min, max}) {
+    return Math.min(Math.max(value, min), max)
+}
