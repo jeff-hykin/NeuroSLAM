@@ -9,7 +9,19 @@
     - then its just abs-diff in pixels
 - # How do the head direction cells work?
     - `yaw_height_hdc_iteration()` is the important function
-    - it has two input sources: landmark memory, and vestibular input (bio-accelerometer)
-        - the landmark memory is called "visual templates" in the code. It finds the singular most-similar visual template and that adds "energy" to a specific head direction neuron
-        - the vestibular input is simulated with the "visual odometry" in the code. It provides azimuth and pitch, but for some reason they call it yaw and height
+    - theres a matrix (usually 36x36) each representing a single head direction cell
+        - each azimuth-pitch pair is a single cell (sphere pretty much)
+    - `yaw_height_hdc_iteration` has two input sources: landmark memory, and vestibular input (bio-accelerometer)
+        - the landmark memory data causes one singular neuron in a particular direction to get excited
+            - there's these "visual templates" in the code that are generated over time (frequently, maybe even memory-leak level of frequently)
+            - each template is like a memory storing the azimuth and pitch of whatever it was looking at that frame (its best guess at the azimuth and pitch)
+            - each template also has a "decay" value. Its based on how long it's been, and what frames it's matched (and how well it matches)
+            - the head direction cell function gets handed one template; the template that best matches the current frame
+            - it finds the HDC cell that corrisponds to the azimuth and pitch of that template, and adds "energy" based on the decay of the template
+         called "visual templates" in the code. It provides the azimuth, pitch,  most-highly matching visual template and that adds "energy" to a specific head direction neuron
+        - the other input (vestibular) is simulated with the "visual odometry" in the code
+            - the visual odometry is a simple scanline intensity; really basic pixel comparison
+            - it also provides an azimuth and pitch, which for some reason, the code calls "yaw" and "height"
+            - these forces pretty much only matter when they're greater than zero, in which case they heavily influence the head direction cells into rotating into a particular direction
+              (final step of the code)
 - # How does the experience map work?
