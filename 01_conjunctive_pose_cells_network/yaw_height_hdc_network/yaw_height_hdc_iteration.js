@@ -1,4 +1,4 @@
-import { clamp } from "../../utils/misc.js"
+import { clamp, circShift } from "../../utils/misc.js"
 
 // TODO: needs testing, and needs rewriting with tensors
 export function yawHeightHdcIteration(vtId, yawRotV, heightV, yawGlobals) {
@@ -136,8 +136,8 @@ export function yawHeightHdcIteration(vtId, yawRotV, heightV, yawGlobals) {
             .map((row) => row.map((cell) => cell * (1 - weight)))
             .map((row, i) => row.map((cell, j) => cell + circshift(YAW_HEIGHT_HDC, [0, shiftValue + Math.sign(heightV)])[i][j] * weight))
     }
-
     return headDirectionCells
+
 }
 
 // export function yawHeightHdcIteration(vt_id, yawRotV, heightV, g) {
