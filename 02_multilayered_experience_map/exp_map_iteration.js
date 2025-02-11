@@ -4,13 +4,8 @@ import { clipRadian180 } from "./clip_radian_180.js"
 import { getSignedDeltaRadian } from "./get_signed_delta_radian.js"
 
 export function expMapIteration({ vtId, transV, yawRotV, heightV, xGc, yGc, zGc, curYawHdc, curHeight, expGlobals }) {
-    // Define global variables (make sure they are initialized elsewhere)
-    var {
-        EXPERIENCES,
-        CUR_EXP_ID,
-        PREV_EXP_ID, // NOTE: in the original, for some reason, this was a local var (maybe by accident)
-        NUM_EXPS,
-        MIN_DELTA_EM,
+    // used but not modified
+    const {
         DELTA_EXP_GC_HDC_THRESHOLD,
         VT,
         PREV_VT_ID,
@@ -19,13 +14,22 @@ export function expMapIteration({ vtId, transV, yawRotV, heightV, xGc, yGc, zGc,
         GC_Z_DIM,
         YAW_HEIGHT_HDC_Y_DIM,
         YAW_HEIGHT_HDC_H_DIM,
+        EXP_CORRECTION,
+        EXP_LOOPS,
+    } = expGlobals
+
+    // modified stuff
+    var {
+        EXPERIENCES,
+        ACCUM_DELTA_YAW,
         ACCUM_DELTA_X,
         ACCUM_DELTA_Y,
         ACCUM_DELTA_Z,
-        ACCUM_DELTA_YAW,
+        CUR_EXP_ID,
+        PREV_EXP_ID, // NOTE: in the original, for some reason, this was a local var (maybe by accident)
+        NUM_EXPS,
         DELTA_EM,
-        EXP_CORRECTION,
-        EXP_LOOPS,
+        MIN_DELTA_EM,
         EXP_HISTORY,
     } = expGlobals
 
@@ -36,14 +40,15 @@ export function expMapIteration({ vtId, transV, yawRotV, heightV, xGc, yGc, zGc,
     ACCUM_DELTA_Z += heightV
 
     // Compute delta for each dimension
-    let minDeltaX = getMinDelta(EXPERIENCES[CUR_EXP_ID].x_gc, xGc, GC_X_DIM)
-    let minDeltaY = getMinDelta(EXPERIENCES[CUR_EXP_ID].y_gc, yGc, GC_Y_DIM)
-    let minDeltaZ = getMinDelta(EXPERIENCES[CUR_EXP_ID].z_gc, zGc, GC_Z_DIM)
+    const currentExperience = EXPERIENCES[CUR_EXP_ID]
+    let minDeltaX = getMinDelta(currentExperience.x_gc, xGc, GC_X_DIM)
+    let minDeltaY = getMinDelta(currentExperience.y_gc, yGc, GC_Y_DIM)
+    let minDeltaZ = getMinDelta(currentExperience.z_gc, zGc, GC_Z_DIM)
 
-    let minDeltaYaw = getMinDelta(EXPERIENCES[CUR_EXP_ID].yaw_hdc, curYawHdc, YAW_HEIGHT_HDC_Y_DIM)
-    let minDeltaHeight = getMinDelta(EXPERIENCES[CUR_EXP_ID].height_hdc, curHeight, YAW_HEIGHT_HDC_H_DIM)
+    let minDeltaYaw = getMinDelta(currentExperience.yaw_hdc, curYawHdc, YAW_HEIGHT_HDC_Y_DIM)
+    let minDeltaHeight = getMinDelta(currentExperience.height_hdc, curHeight, YAW_HEIGHT_HDC_H_DIM)
 
-    let minDeltaYawReversed = getMinDelta(EXPERIENCES[CUR_EXP_ID].yaw_hdc, YAW_HEIGHT_HDC_Y_DIM / 2 - curYawHdc, YAW_HEIGHT_HDC_Y_DIM)
+    let minDeltaYawReversed = getMinDelta(currentExperience.yaw_hdc, YAW_HEIGHT_HDC_Y_DIM / 2 - curYawHdc, YAW_HEIGHT_HDC_Y_DIM)
     minDeltaYaw = Math.min(minDeltaYaw, minDeltaYawReversed)
 
     let deltaEm = Math.sqrt(minDeltaX ** 2 + minDeltaY ** 2 + minDeltaZ ** 2 + minDeltaYaw ** 2 + minDeltaHeight ** 2)
@@ -157,4 +162,19 @@ export function expMapIteration({ vtId, transV, yawRotV, heightV, xGc, yGc, zGc,
 
     // Maintain history of active experience
     EXP_HISTORY.push(CUR_EXP_ID)
+    
+    // only return modified stuff
+    return {
+        EXPERIENCES,
+        ACCUM_DELTA_YAW,
+        ACCUM_DELTA_X,
+        ACCUM_DELTA_Y,
+        ACCUM_DELTA_Z,
+        CUR_EXP_ID,
+        PREV_EXP_ID,
+        NUM_EXPS,
+        DELTA_EM,
+        MIN_DELTA_EM,
+        EXP_HISTORY,
+    }
 }
