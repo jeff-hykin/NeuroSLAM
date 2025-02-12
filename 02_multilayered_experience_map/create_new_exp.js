@@ -1,11 +1,20 @@
 import { getSignedDeltaRadian } from "./get_signed_delta_radian.js"
 import { clipRadian180 } from "./clip_radian_180.js"
 
-export function createNewExp(curExpId, newExpId, vt_id, xGc, yGc, zGc, curYawHdc, curHeight) {
-    // Create a new experience and add the current experience to it
-
-    // Assuming the necessary global variables (like VT, EXPERIENCES, ACCUM_DELTA_X, etc.) are available
-    // and are already defined in the global scope.
+export function createNewExp({curExpId, newExpId, vtId, xGc, yGc, zGc, curYawHdc, curHeight, expGlobals}) {
+    // used but not modified
+    const {
+        ACCUM_DELTA_X,
+        ACCUM_DELTA_Y,
+        ACCUM_DELTA_Z,
+        ACCUM_DELTA_YAW,
+    } = expGlobals
+    
+    // modified
+    var {
+        VT,
+        EXPERIENCES 
+    } = expGlobals
 
     // Add link information to the current experience for the new experience
     // including the experience_id, odo distance to the experience, 
@@ -30,7 +39,7 @@ export function createNewExp(curExpId, newExpId, vt_id, xGc, yGc, zGc, curYawHdc
         z_gc: zGc,
         yaw_hdc: curYawHdc,
         height_hdc: curHeight,
-        vt_id: vt_id,
+        vt_id: vtId,
         x_exp: currentExp.x_exp + ACCUM_DELTA_X,
         y_exp: currentExp.y_exp + ACCUM_DELTA_Y,
         z_exp: currentExp.z_exp + ACCUM_DELTA_Z,
@@ -43,7 +52,12 @@ export function createNewExp(curExpId, newExpId, vt_id, xGc, yGc, zGc, curYawHdc
     EXPERIENCES[newExpId] = newExp;
 
     // Add this experience ID to the VT for efficient lookup
-    let vt = VT[vt_id];
+    let vt = VT[vtId];
     vt.numExp++;
     vt.EXPERIENCES[vt.numExp - 1] = { id: newExpId };
+
+    return {
+        EXPERIENCES,
+        VT,
+    }
 }

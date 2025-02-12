@@ -2,6 +2,7 @@ import { getMinDelta } from "./get_min_delta.js"
 import { createNewExp } from "./create_new_exp.js"
 import { clipRadian180 } from "./clip_radian_180.js"
 import { getSignedDeltaRadian } from "./get_signed_delta_radian.js"
+import { createNewExp } from "./create_new_exp.js"
 
 export function expMapIteration({ vtId, transV, yawRotV, heightV, xGc, yGc, zGc, curYawHdc, curHeight, expGlobals }) {
     // used but not modified
@@ -38,26 +39,47 @@ export function expMapIteration({ vtId, transV, yawRotV, heightV, xGc, yGc, zGc,
     ACCUM_DELTA_X += transV * Math.cos(ACCUM_DELTA_YAW)
     ACCUM_DELTA_Y += transV * Math.sin(ACCUM_DELTA_YAW)
     ACCUM_DELTA_Z += heightV
-
+    
+    // 
     // Compute delta for each dimension
-    const currentExperience = EXPERIENCES[CUR_EXP_ID]
-    let minDeltaX = getMinDelta(currentExperience.x_gc, xGc, GC_X_DIM)
-    let minDeltaY = getMinDelta(currentExperience.y_gc, yGc, GC_Y_DIM)
-    let minDeltaZ = getMinDelta(currentExperience.z_gc, zGc, GC_Z_DIM)
-
-    let minDeltaYaw = getMinDelta(currentExperience.yaw_hdc, curYawHdc, YAW_HEIGHT_HDC_Y_DIM)
-    let minDeltaHeight = getMinDelta(currentExperience.height_hdc, curHeight, YAW_HEIGHT_HDC_H_DIM)
-
-    let minDeltaYawReversed = getMinDelta(currentExperience.yaw_hdc, YAW_HEIGHT_HDC_Y_DIM / 2 - curYawHdc, YAW_HEIGHT_HDC_Y_DIM)
-    minDeltaYaw = Math.min(minDeltaYaw, minDeltaYawReversed)
-
-    let deltaEm = Math.sqrt(minDeltaX ** 2 + minDeltaY ** 2 + minDeltaZ ** 2 + minDeltaYaw ** 2 + minDeltaHeight ** 2)
-    DELTA_EM.push(deltaEm)
-
+    // 
+        const currentExperience = EXPERIENCES[CUR_EXP_ID]
+        let minDeltaX = getMinDelta(currentExperience.x_gc, xGc, GC_X_DIM)
+        let minDeltaY = getMinDelta(currentExperience.y_gc, yGc, GC_Y_DIM)
+        let minDeltaZ = getMinDelta(currentExperience.z_gc, zGc, GC_Z_DIM)
+        let minDeltaYaw = getMinDelta(currentExperience.yaw_hdc, curYawHdc, YAW_HEIGHT_HDC_Y_DIM)
+        let minDeltaHeight = getMinDelta(currentExperience.height_hdc, curHeight, YAW_HEIGHT_HDC_H_DIM)
+        let minDeltaYawReversed = getMinDelta(currentExperience.yaw_hdc, YAW_HEIGHT_HDC_Y_DIM / 2 - curYawHdc, YAW_HEIGHT_HDC_Y_DIM)
+        
+        minDeltaYaw = Math.min(minDeltaYaw, minDeltaYawReversed)
+        let deltaEm = Math.sqrt(minDeltaX ** 2 + minDeltaY ** 2 + minDeltaZ ** 2 + minDeltaYaw ** 2 + minDeltaHeight ** 2)
+        DELTA_EM.push(deltaEm)
+    
+    // 
     // Check if new experience should be created
+    // 
     if (VT[vtId].numExp === 0 || deltaEm > DELTA_EXP_GC_HDC_THRESHOLD) {
         NUM_EXPS++
-        createNewExp(CUR_EXP_ID, NUM_EXPS, vtId, xGc, yGc, zGc, curYawHdc, curHeight)
+        var { EXPERIENCES, VT } = createNewExp({
+            curExpId: CUR_EXP_ID,
+            newExpId: NUM_EXPS,
+            vtId,
+            xGc,
+            yGc,
+            zGc,
+            curYawHdc,
+            curHeight,
+            expGlobals: {
+                // modified
+                EXPERIENCES,
+                VT,
+                // read only
+                ACCUM_DELTA_X,
+                ACCUM_DELTA_Y,
+                ACCUM_DELTA_Z,
+                ACCUM_DELTA_YAW,
+            },
+        })
         
         PREV_EXP_ID = CUR_EXP_ID
         CUR_EXP_ID = NUM_EXPS
@@ -103,22 +125,42 @@ export function expMapIteration({ vtId, transV, yawRotV, heightV, xGc, yGc, zGc,
                 }
 
                 if (!linkExists) {
+                    const currentExp = EXPERIENCES[CUR_EXP_ID]
                     // Create a link if it doesn't exist
                     let link = {
                         exp_id: matchedExpId,
                         d_xy: Math.sqrt(ACCUM_DELTA_X ** 2 + ACCUM_DELTA_Y ** 2),
                         d_z: ACCUM_DELTA_Z,
-                        heading_yaw_exp_rad: getSignedDeltaRadian(EXPERIENCES[CUR_EXP_ID].yaw_exp_rad, Math.atan2(ACCUM_DELTA_Y, ACCUM_DELTA_X)),
-                        facing_yaw_exp_rad: getSignedDeltaRadian(EXPERIENCES[CUR_EXP_ID].yaw_exp_rad, ACCUM_DELTA_YAW),
+                        heading_yaw_exp_rad: getSignedDeltaRadian(currentExp.yaw_exp_rad, Math.atan2(ACCUM_DELTA_Y, ACCUM_DELTA_X)),
+                        facing_yaw_exp_rad: getSignedDeltaRadian(currentExp.yaw_exp_rad, ACCUM_DELTA_YAW),
                     }
-                    EXPERIENCES[CUR_EXP_ID].links.push(link)
-                    EXPERIENCES[CUR_EXP_ID].numlinks++
+                    currentExp.links.push(link)
+                    currentExp.numlinks++
                 }
             }
 
             if (matchedExpId === 0) {
                 NUM_EXPS++
-                createNewExp(CUR_EXP_ID, NUM_EXPS, vtId, xGc, yGc, zGc, curYawHdc, curHeight)
+                var { EXPERIENCES, VT } = createNewExp({
+                    curExpId: CUR_EXP_ID,
+                    newExpId: NUM_EXPS,
+                    vtId,
+                    xGc,
+                    yGc,
+                    zGc,
+                    curYawHdc,
+                    curHeight,
+                    expGlobals: {
+                        // modified
+                        EXPERIENCES,
+                        VT,
+                        // read only
+                        ACCUM_DELTA_X,
+                        ACCUM_DELTA_Y,
+                        ACCUM_DELTA_Z,
+                        ACCUM_DELTA_YAW,
+                    },
+                })
                 matchedExpId = NUM_EXPS
             }
 
@@ -138,24 +180,27 @@ export function expMapIteration({ vtId, transV, yawRotV, heightV, xGc, yGc, zGc,
             for (let linkId = 0; linkId < EXPERIENCES[expId].numlinks; linkId++) {
                 let e0 = expId
                 let e1 = EXPERIENCES[expId].links[linkId].exp_id
+                const exp0 = EXPERIENCES[e0]
+                const exp1 = EXPERIENCES[e1]
 
                 // Compute where e0 thinks e1 should be based on link info
-                let lx = EXPERIENCES[e0].x_exp + EXPERIENCES[e0].links[linkId].d_xy * Math.cos(EXPERIENCES[e0].yaw_exp_rad + EXPERIENCES[e0].links[linkId].heading_yaw_exp_rad)
-                let ly = EXPERIENCES[e0].y_exp + EXPERIENCES[e0].links[linkId].d_xy * Math.sin(EXPERIENCES[e0].yaw_exp_rad + EXPERIENCES[e0].links[linkId].heading_yaw_exp_rad)
-                let lz = EXPERIENCES[e0].z_exp + EXPERIENCES[e0].links[linkId].d_z
+                let lx = exp0.x_exp + exp0.links[linkId].d_xy * Math.cos(exp0.yaw_exp_rad + exp0.links[linkId].heading_yaw_exp_rad)
+                let ly = exp0.y_exp + exp0.links[linkId].d_xy * Math.sin(exp0.yaw_exp_rad + exp0.links[linkId].heading_yaw_exp_rad)
+                let lz = exp0.z_exp + exp0.links[linkId].d_z
 
                 // Apply corrections
-                EXPERIENCES[e0].x_exp += (EXPERIENCES[e1].x_exp - lx) * EXP_CORRECTION
-                EXPERIENCES[e0].y_exp += (EXPERIENCES[e1].y_exp - ly) * EXP_CORRECTION
-                EXPERIENCES[e0].z_exp += (EXPERIENCES[e1].z_exp - lz) * EXP_CORRECTION
-                EXPERIENCES[e1].x_exp -= (EXPERIENCES[e1].x_exp - lx) * EXP_CORRECTION
-                EXPERIENCES[e1].y_exp -= (EXPERIENCES[e1].y_exp - ly) * EXP_CORRECTION
-                EXPERIENCES[e1].z_exp -= (EXPERIENCES[e1].z_exp - lz) * EXP_CORRECTION
+                exp0.x_exp += (exp1.x_exp - lx) * EXP_CORRECTION
+                exp0.y_exp += (exp1.y_exp - ly) * EXP_CORRECTION
+                exp0.z_exp += (exp1.z_exp - lz) * EXP_CORRECTION
+                
+                exp1.x_exp -= (exp1.x_exp - lx) * EXP_CORRECTION
+                exp1.y_exp -= (exp1.y_exp - ly) * EXP_CORRECTION
+                exp1.z_exp -= (exp1.z_exp - lz) * EXP_CORRECTION
 
                 // Correct yaw based on facing information
-                let TempDeltaYawFacing = getSignedDeltaRadian(EXPERIENCES[e0].yaw_exp_rad + EXPERIENCES[e0].links[linkId].facing_yaw_exp_rad, EXPERIENCES[e1].yaw_exp_rad)
-                EXPERIENCES[e0].yaw_exp_rad = clipRadian180(EXPERIENCES[e0].yaw_exp_rad + TempDeltaYawFacing * EXP_CORRECTION)
-                EXPERIENCES[e1].yaw_exp_rad = clipRadian180(EXPERIENCES[e1].yaw_exp_rad - TempDeltaYawFacing * EXP_CORRECTION)
+                let TempDeltaYawFacing = getSignedDeltaRadian(exp0.yaw_exp_rad + exp0.links[linkId].facing_yaw_exp_rad, exp1.yaw_exp_rad)
+                exp0.yaw_exp_rad = clipRadian180(exp0.yaw_exp_rad + TempDeltaYawFacing * EXP_CORRECTION)
+                exp1.yaw_exp_rad = clipRadian180(exp1.yaw_exp_rad - TempDeltaYawFacing * EXP_CORRECTION)
             }
         }
     }
