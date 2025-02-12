@@ -1,3 +1,57 @@
+// 
+// 
+// 
+    // import { ImageScript } from "./image_script.js"
+    // const image = await Image.decode(bytesOfImage);
+    // // NOTE: all images are upgraded to RGBA
+    // // docs: https://imagescript.matmen.dev/Image
+    // image.saturation(0)
+    // image.averageColor
+    // image.blue
+    // image.clone
+    // image.composite
+    // image.contain
+    // image.cover
+    // image.crop
+    // image.cropCircle
+    // image.dominantColor
+    // image.drawBox
+    // image.drawCircle
+    // await image.encode
+    // image.encodeJPEG
+    // image.encodeWEBP
+    // image.fill
+    // image.fit
+    // image.getPixelAt
+    // image.getRGBAAt
+    // image.green
+    // image.hueShift
+    // image.invert
+    // image.invertHue
+    // image.invertSaturation
+    // image.invertValue
+    // image.iterateWithColors
+    // image.lightness
+    // image.opacity
+    // image.red
+    // image.resize
+    // image.rotate
+    // image.roundCorners
+    // image.saturation
+    // image.scale
+    // image.setPixelAt
+    // image.colorToRGB
+    // image.colorToRGBA
+    // image.decode
+    // image.gradient
+    // image.hslToColor
+    // image.hslaToColor
+    // image.renderSVG
+    // image.renderText
+    // image.rgbToColor
+    // image.rgbaToColor
+    // image.rgbaToHSLA 
+        
 var __defProp = Object.defineProperty;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __esm = (fn2, res) => function __init() {
