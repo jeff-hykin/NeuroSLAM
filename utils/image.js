@@ -1,3 +1,56 @@
+import { Tensor, Ops } from "../utils/tensor_wrapper.js"
+
+// WIP
+function grayscaleBilinearResize(imageTensor, height, width) {
+    const [imgHeight, imageWidth] = imageTensor.shape
+
+    imageTensor = imageTensor.flatten()
+    
+    var xRatio = ((imgWidth - 1) / (width - 1) > 0)    ?   (imgWidth  - 1) / (width  - 1)   :   0
+    var yRatio = ((imgHeight - 1) / (height - 1) > 0)  ?   (imgHeight - 1) / (height - 1)   :   0
+
+    // Generate the grid of coordinates
+    // var y = Ops.range(0, (imgHeight*imgWidth)-1)
+    var y = Ops.range(0, (height*width)-1)
+    var x = Ops.remainder(y, width)
+    y = y.subtract(x).div(width)
+    
+    // height = 3
+    // width = 4
+    // x = [ 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3 ]
+    // y = [ 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2 ] 
+    
+    x = x.mul(xRatio)
+    y = y.mul(yRatio)
+    // Compute the lower and higher x and y indices
+    var x_l = x.floor()
+    var y_l = y.floor()
+    
+    var x_h = x.ceil()
+    var y_h = y.ceil()
+
+    // Calculate the weights for interpolation
+    var x_weight = x.subtract(x_l)
+    var y_weight = y.subtract(y_l)
+
+    // Index the imageTensor based on calculated coordinates
+    var a = new Tensor(y_l.mul(imgWidth).add(x_l).mapTop(each=>imageTensor.at(each)))
+    var b = new Tensor(y_l.mul(imgWidth).add(x_h).mapTop(each=>imageTensor.at(each)))
+    var c = new Tensor(y_h.mul(imgWidth).add(x_l).mapTop(each=>imageTensor.at(each)))
+    var d = new Tensor(y_h.mul(imgWidth).add(x_h).mapTop(each=>imageTensor.at(each)))
+    
+    var x_neg = x_weight.neg().add(1)
+    var y_neg = y_weight.neg().add(1)
+    // Perform the bilinear interpolation
+    return a
+        .mul(x_neg)
+        .mul(y_neg)
+        .add(b.mul(x_weight).mul(y_neg))
+        .add(c.mul(y_weight).mul(x_neg))
+        .add(d.mul(x_weight).mul(y_weight))
+        .reshape([height, width])
+}
+
 export function toGrayscaleMagnitude(imgData, {redIndex = 0, greenIndex = 1, blueIndex = 2, redWeight= 0.29890, greenWeight= 0.58700, blueWeight= 0.11400, force8BitAccuracy=false} = {}) {
     // imgData example: (output of https://github.com/jeff-hykin/fast-png)
     // {
