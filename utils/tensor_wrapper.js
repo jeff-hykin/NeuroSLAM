@@ -39,6 +39,9 @@ const elementMapMutate = (array, fn)=>{
     }
 }
 export const Ops = {
+    elementMapMutate: (tensor, fn)=>{
+        elementMapMutate(tensor?.data||tensor, fn)
+    },
     elementMap: (tensor, fn)=>{
         let arrayClone = structuredClone(tensor?.data||tensor)
         elementMapMutate(arrayClone, fn)
@@ -52,12 +55,16 @@ export const Ops = {
         return Ops.elementMap(tensor, a=>Math.abs(a))
     },
     add: (...values)=>Object.setPrototypeOf(torch.add(...values), Tensor.prototype),
-    subtract: (...values)=>Object.setPrototypeOf(torch.sub(...values), Tensor.prototype),
+    subtract: (...values)=>Ops.add(values.shift(), ...values.map(a=>a.neg())),
     mul: (...values)=>Object.setPrototypeOf(torch.mul(...values), Tensor.prototype),
     div: (...values)=>Object.setPrototypeOf(torch.div(...values), Tensor.prototype),
     sum: (...values)=>Object.setPrototypeOf(torch.sum(...values), Tensor.prototype),
     crossProduct: (...values)=>Object.setPrototypeOf(torch.matmul(...values), Tensor.prototype),
     randomNormal: (shape)=>Object.setPrototypeOf(torch.randn(shape), Tensor.prototype),
+    remainder(tensor, divisor){
+        tensor = toTensor(tensor)
+        return Ops.elementMap(tensor, a=>a%divisor)
+    },
     // TODO:
         // concat/stack-type stuff
         // slice
@@ -225,6 +232,7 @@ export class Tensor extends torch.Tensor {
         return this.tolist()
     }
 
+
     // 
     // new polyfill methods
     // 
@@ -242,6 +250,22 @@ export class Tensor extends torch.Tensor {
     }
     slice(...args) {
         return new Tensor(this.data.slice(...args))
+    }
+    floor() {
+        return Ops.elementMap(this, a=>Math.floor(a))
+    }
+    ceil() {
+        return Ops.elementMap(this, a=>Math.ceil(a))
+    }
+    round(digits=0) {
+        if (digits == 0) {
+            return Ops.elementMap(this, a=>Math.ceil(a))
+        } else {
+            return Ops.elementMap(this.mul(10**digits), a=>Math.ceil(a)).div(10**digits)
+        }
+    }
+    mapTop(fn) {
+        return this.data.map(fn)
     }
 
     // 
