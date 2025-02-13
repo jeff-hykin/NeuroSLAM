@@ -34,10 +34,12 @@ function grayscaleBilinearResize(imageTensor, height, width) {
     var y_weight = y.subtract(y_l)
 
     // Index the imageTensor based on calculated coordinates
-    var a = new Tensor(y_l.mul(imgWidth).add(x_l).mapTop(each=>imageTensor.at(each)))
-    var b = new Tensor(y_l.mul(imgWidth).add(x_h).mapTop(each=>imageTensor.at(each)))
-    var c = new Tensor(y_h.mul(imgWidth).add(x_l).mapTop(each=>imageTensor.at(each)))
-    var d = new Tensor(y_h.mul(imgWidth).add(x_h).mapTop(each=>imageTensor.at(each)))
+    var l_width = y_l.mul(imgWidth)
+    var h_width = y_h.mul(imgWidth)
+    var a = new Tensor(l_width.add(x_l).mapTop(each=>imageTensor.at(each)))
+    var b = new Tensor(l_width.add(x_h).mapTop(each=>imageTensor.at(each)))
+    var c = new Tensor(h_width.add(x_l).mapTop(each=>imageTensor.at(each)))
+    var d = new Tensor(h_width.add(x_h).mapTop(each=>imageTensor.at(each)))
     
     var x_neg = x_weight.neg().add(1)
     var y_neg = y_weight.neg().add(1)
@@ -49,7 +51,12 @@ function grayscaleBilinearResize(imageTensor, height, width) {
         .add(c.mul(y_weight).mul(x_neg))
         .add(d.mul(x_weight).mul(y_weight))
         .reshape([height, width])
+    
+    // array([[   0.,   13.,   26.,   39.],
+    //    [ 580.,  593.,  606.,  619.],
+    //    [1160., 1173., 1186., 1199.]])
 }
+// grayscaleBilinearResize(Ops.range(0, (imgHeight*imgWidth)-1).reshape([imgHeight,imgWidth]), 3,4)
 
 export function toGrayscaleMagnitude(imgData, {redIndex = 0, greenIndex = 1, blueIndex = 2, redWeight= 0.29890, greenWeight= 0.58700, blueWeight= 0.11400, force8BitAccuracy=false} = {}) {
     // imgData example: (output of https://github.com/jeff-hykin/fast-png)
