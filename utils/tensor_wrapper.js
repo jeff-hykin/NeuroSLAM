@@ -79,6 +79,7 @@ const recursiveSlice = (data, slices, originalShape) => {
         throw Error(`slice ${slice} is not a valid index or slice`)
     }
 }
+const subtract = (...values)=>Ops.add(values.shift(), ...values.map(Ops.negative))
 export const Ops = {
     // init helpers
     ones: (shape)=>Object.setPrototypeOf(torch.ones(shape), Tensor.prototype),
@@ -108,9 +109,6 @@ export const Ops = {
     at(tensor, indicesOrSlices) {
         return toTensor(tensor).at(...indicesOrSlices)
     },
-    gather(tensor, indices, {axis=0}={}) {
-        return 
-    },
     shapeOf(tensor) {
         return toTensor(tensor).shape
     },
@@ -130,23 +128,72 @@ export const Ops = {
         return toTensor(tensor).ceil()
     },
     flatten(tensor, {depth=null}={}) {
+        if (typeof tensor == "number") {
+            return new Tensor([tensor])
+        }
         return toTensor(tensor).flatten(depth)
     },
-    disposeOf(tensor) {
+    dispose(tensor) {
         // note: this is more of a shim so that other libraries can use the same name
         if (tensor.dispose instanceof Function) {
             tensor.dispose()
         }
     },
-    // elementwise
-    negative: (tensor)=>toTensor(tensor).neg(),
+    // element wise or scalar broadcast
+    negative: (tensor)=>{
+        if (typeof tensor == "number") {
+            return -tensor
+        } 
+        return toTensor(tensor).neg()
+    },
     abs: (tensor)=>{
         tensor = toTensor(tensor)
         return Ops.transformElements(tensor, a=>Math.abs(a))
     },
-    add: (...values)=>Object.setPrototypeOf(torch.add(...values), Tensor.prototype),
-    subtract: (...values)=>Ops.add(values.shift(), ...values.map(a=>a.neg())),
-    mul: (...values)=>Object.setPrototypeOf(torch.mul(...values), Tensor.prototype),
+    add: (...values)=>{
+        if (values.every(each=>typeof each == "number")) {
+            return values.reduce((a,b)=>a+b)
+        } else {
+            let total = 0
+            for (let each of values) {
+                if (typeof total == "number") {
+                    if (typeof each == "number") {
+                        total += each 
+                    } else {
+                        each = toTensor(each)
+                        total = each.add(total)
+                    }
+                } else if (each.add) {
+                    total = total.add(each)
+                }
+            }
+            Object.setPrototypeOf(total, Tensor.prototype)
+            return total
+        }
+    },
+    mul: (...values)=>{
+        if (values.every(each=>typeof each == "number")) {
+            return values.reduce((a,b)=>a+b)
+        } else {
+            let total = 1
+            for (let each of values) {
+                if (typeof total == "number") {
+                    if (typeof each == "number") {
+                        total *= each 
+                    } else {
+                        each = toTensor(each)
+                        total = each.mul(total)
+                    }
+                } else {
+                    total = total.mul(each)
+                }
+            }
+            Object.setPrototypeOf(total, Tensor.prototype)
+            return total
+        }
+    },
+    subtract,
+    sub: subtract,
     div: (...values)=>Object.setPrototypeOf(torch.div(...values), Tensor.prototype),
     remainder(tensor, divisor){
         tensor = toTensor(tensor)
@@ -154,8 +201,7 @@ export const Ops = {
     },
     // group ops
     sum: (...values)=>{
-        values = values.map(toTensor)
-        Object.setPrototypeOf(torch.sum(...values), Tensor.prototype)
+        return Math.sum(values.map(each=>Ops.flatten(each).sum()))
     },
     crossProduct: (...values)=>Object.setPrototypeOf(torch.matmul(...values), Tensor.prototype),
     // TODO:
@@ -184,6 +230,26 @@ export const Ops = {
     //     }
     //     return new Tensor(newElements)
     // },
+}
+
+export const autoFillOps = (Ops)=>{
+    if (!Ops.negative) {
+        Ops.negative = Ops.neg
+    }
+    if (!Ops.subtract) {
+        Ops.subtract = Ops.sub
+    }
+    if (!Ops.smartAt) {
+        Ops.smartAt = Ops.at
+    }
+    if (!Ops.shapeOf && Ops.shape instanceof Function) {
+        Ops.shapeOf = Ops.shape
+    }
+    if (!Ops.flatten && Ops.shapeOf && Ops.reshape) {
+        Ops.flatten = (tensor)=>{
+            return Ops.reshape(tensor, [ product(Ops.shapeOf(tensor)) ])
+        }
+    }
 }
 
 export class Tensor extends torch.Tensor {

@@ -1,62 +1,89 @@
-import { Tensor, Ops } from "../utils/tensor_wrapper.js"
+import { Tensor, Ops, autoFillOps } from "../utils/tensor_wrapper.js"
 
-// WIP
-function grayscaleBilinearResize(imageTensor, height, width) {
-    const [imgHeight, imageWidth] = imageTensor.shape
+/**
+ * Image resizing function
+ *
+ * @example
+ * ```js
+ * let height = 40
+ * let width = 30
+ * import { Tensor, Ops, autoFillOps } from "../utils/tensor_wrapper.js"
+ * console.log(_grayscaleBilinearResize({
+ *     imageTensor: Ops.range(0, (height*width)).reshape([height,-1]),
+ *     height: 4,
+ *     width: 3,
+ * },Ops))
+ * // should output:
+ * //data: [
+ * //   [ 0, 7.25, 29 ],
+ * //   [ 390, 202.25, 419 ],
+ * //   [ 780, 397.25, 809 ],
+ * //   [ 1170, 592.25, 1199 ],
+ * //]
+ * ```
+ */
+export function _grayscaleBilinearResize({imageTensor, height, width}, { range, shapeOf, flatten, mul, add, sub, div, floor, ceil, neg, at, remainder, mod, dispose, reshape, }=Ops) {
+    remainder = remainder||mod // doesn't matter for this
+    // imageTensor = [ 0, 1, 2, ... 1199, ].reshape([imgHeight, imgWidth])
+    const [imgHeight, imgWidth] = shapeOf(imageTensor)
 
-    imageTensor = imageTensor.flatten()
+    imageTensor = flatten(imageTensor)
     
     var xRatio = ((imgWidth - 1) / (width - 1) > 0)    ?   (imgWidth  - 1) / (width  - 1)   :   0
     var yRatio = ((imgHeight - 1) / (height - 1) > 0)  ?   (imgHeight - 1) / (height - 1)   :   0
 
     // Generate the grid of coordinates
     // var y = Ops.range(0, (imgHeight*imgWidth)-1)
-    var y = Ops.range(0, (height*width)-1)
-    var x = Ops.remainder(y, width)
-    y = y.subtract(x).div(width)
+    var y = range(0, (height*width))
+    var x = remainder(y, width)
+    y = div(sub(y, x), width)
     
     // height = 3
     // width = 4
     // x = [ 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3 ]
     // y = [ 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2 ] 
     
-    x = x.mul(xRatio)
-    y = y.mul(yRatio)
+    x = mul(x, xRatio)  
+    y = mul(y, yRatio)
     // Compute the lower and higher x and y indices
-    var x_l = x.floor()
-    var y_l = y.floor()
+    var x_l = floor(x)
+    var y_l = floor(y)
     
-    var x_h = x.ceil()
-    var y_h = y.ceil()
+    var x_h = ceil(x)
+    var y_h = ceil(y)
 
     // Calculate the weights for interpolation
-    var x_weight = x.subtract(x_l)
-    var y_weight = y.subtract(y_l)
+    var x_weight = sub(x, x_l)
+    var y_weight = sub(y, y_l)
 
     // Index the imageTensor based on calculated coordinates
-    var l_width = y_l.mul(imgWidth)
-    var h_width = y_h.mul(imgWidth)
-    var a = new Tensor(l_width.add(x_l).mapTop(each=>imageTensor.at(each)))
-    var b = new Tensor(l_width.add(x_h).mapTop(each=>imageTensor.at(each)))
-    var c = new Tensor(h_width.add(x_l).mapTop(each=>imageTensor.at(each)))
-    var d = new Tensor(h_width.add(x_h).mapTop(each=>imageTensor.at(each)))
+    var l_width = mul(y_l, imgWidth)
+    var h_width = mul(y_h, imgWidth)
+    var a = at(imageTensor, [add(l_width, x_l)])
+    var b = at(imageTensor, [add(l_width, x_h)])
+    var c = at(imageTensor, [add(h_width, x_l)])
+    var d = at(imageTensor, [add(h_width, x_h)])
     
-    var x_neg = x_weight.neg().add(1)
-    var y_neg = y_weight.neg().add(1)
+    var x_neg = sub(1, x_weight)
+    var y_neg = sub(1, x_weight)
     // Perform the bilinear interpolation
-    return a
-        .mul(x_neg)
-        .mul(y_neg)
-        .add(b.mul(x_weight).mul(y_neg))
-        .add(c.mul(y_weight).mul(x_neg))
-        .add(d.mul(x_weight).mul(y_weight))
-        .reshape([height, width])
-    
+    return reshape(
+        add(
+            mul(
+                a,
+                x_neg,
+                y_neg,
+            ),
+            mul(b, x_weight, y_neg),
+            mul(c, y_weight, x_neg),
+        ),
+        [height, width]
+    )
     // array([[   0.,   13.,   26.,   39.],
     //    [ 580.,  593.,  606.,  619.],
     //    [1160., 1173., 1186., 1199.]])
 }
-// grayscaleBilinearResize(Ops.range(0, (imgHeight*imgWidth)-1).reshape([imgHeight,imgWidth]), 3,4)
+// _grayscaleBilinearResize(Ops.range(0, (imgHeight*imgWidth)-1).reshape([imgHeight,imgWidth]), 3,4)
 
 export function toGrayscaleMagnitude(imgData, {redIndex = 0, greenIndex = 1, blueIndex = 2, redWeight= 0.29890, greenWeight= 0.58700, blueWeight= 0.11400, force8BitAccuracy=false} = {}) {
     // imgData example: (output of https://github.com/jeff-hykin/fast-png)

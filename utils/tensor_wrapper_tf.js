@@ -90,21 +90,24 @@ const recursiveSlice = (data, slices, originalShape) => {
         }
     }
 }
+const subtract = (...values)=>Ops.add(values.shift(), ...values.map(Ops.negative))
 const Ops = {
     range: (start, end, {step=1}={}) => tf.range(start, end, step),
     shapeOf: (tensor)=>tensor.shape,
     flatten: (tensor)=>tensor.flatten(),
-    mul: (tensor1, tensor2)=>tf.mul(tensor1, tensor2),
-    add: (tensor1, tensor2)=>tf.add(tensor1, tensor2),
-    subtract: (tensor1, tensor2)=>tf.sub(tensor1, tensor2),
+    mul: (...args)=>tf.mul(...args),
+    add: (...args)=>tf.add(...args),
+    subtract,
+    sub: subtract,
     div: (tensor1, tensor2)=>tf.div(tensor1, tensor2),
     floor: (tensor)=>tf.floor(tensor),
+    ceil: (tensor)=>tf.ceil(tensor),
     neg: (tensor)=>tf.neg(tensor),
     atIndex,
     at: (tensor, indexOrSlices)=>{
         return recursiveSlice(tensor, indexOrSlices, tensor.shape)
     },
     mod: (tensor, divisor)=>tf.mod(tensor, divisor),
-    disposeOf: (tensor)=>tensor.dispose(),
+    dispose: (tensor)=>tensor.dispose&&tensor.dispose(),
     reshape: (tensor, shape)=>tensor.reshape(shape),
 }
