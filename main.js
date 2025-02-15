@@ -104,10 +104,8 @@ import { zip, enumerate, count, permute, combinations, wrapAroundGet } from "htt
 
     // change some elements
     document.body = html`<body style="padding:1rem;">
-        Hello World (I render Immediately)
         <br>
         <myAsyncCustomComponent style='background: darkgray; color: white; padding: 1rem; border-radius: 1rem; margin: 0.3rem;' />
         <br>
-        this ^ takes a second to render cause it has a massive async depenency
         <toImgTag style='position: fixed; bottom: 0; left: 0; width: 100%; height: auto;' pngData=${uint8ArrayFor0001Png} />
     </body>`
