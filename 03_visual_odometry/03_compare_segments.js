@@ -23,8 +23,8 @@ export function compareSegments({seg1, seg2, shiftLength, compareLengthOfIntensi
 
         // Slice the tensors and compute the absolute difference
         let compareDifferenceSegments = Ops.abs(
-            tensorSeg1.at([offset, compareLengthOfIntensity]).subtract(
-                tensorSeg2.at([0, (compareLengthOfIntensity-offset)])
+            tensorSeg1.at({start:offset, end:compareLengthOfIntensity}).subtract(
+                tensorSeg2.at({start: 0, end:(compareLengthOfIntensity-offset)})
             )
         )
         // console.log(compareDifferenceSegments.data.map(each=>each.toFixed(4)).join(" "))

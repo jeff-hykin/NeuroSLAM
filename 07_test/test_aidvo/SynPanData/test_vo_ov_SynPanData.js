@@ -3,7 +3,7 @@ import { FileSystem, glob } from "https://deno.land/x/quickr@0.6.72/main/file_sy
 import { Tensor, Ops } from "../../../utils/tensor_wrapper.js"
 
 import { visualOdoInitial } from "../../../03_visual_odometry/00_visual_odo_initial.js"
-import { visualOdoMain } from "../../../03_visual_odometry/visual_odo_main.js"
+import { visualOdoMain } from "../../../03_visual_odometry/01_visual_odo_main.js"
 
 const projectPath = `${FileSystem.thisFolder}/../../../`;
 

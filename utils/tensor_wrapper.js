@@ -1,4 +1,5 @@
 import { torch } from "../imports.js"
+import { isIterableTechnically } from "https://esm.sh/gh/jeff-hykin/good-js@1.14.2.1/source/flattened/is_iterable_technically.js"
 
 const count = function* (start = 0, end = Infinity, step = 1) {
     let count = start
@@ -25,10 +26,10 @@ const toTensor = (tensor)=>{
     }
     return tensor
 }
-const elementMapMutate = (array, fn)=>{
+const _transformElements = (array, fn)=>{
     if (array[0] instanceof Array) {
         for (let each of array) {
-            elementMapMutate(each, fn)
+            _transformElements(each, fn)
         }
     } else {
         var i=-1
@@ -38,36 +39,134 @@ const elementMapMutate = (array, fn)=>{
         }
     }
 }
+const recursiveSlice = (data, slices, originalShape) => {
+    if (!slices || slices.length == 0) {
+        return data
+    }
+    slices = [...slices]
+    let slice = slices.shift()
+    let result
+    // slice object
+    if (slice.start != null || slice.end != null) {
+        result = data.slice(slice.start||0, slice.end||data.length)
+        if (slices.length == 0) {
+            return result
+        } else {
+            return result.map(each=>recursiveSlice(each, slices, originalShape))
+        }
+    } else if (isIterableTechnically(slice)) {
+        return [...slice].map(each=>recursiveSlice(data.at(each), slices, originalShape))
+    } else if (slice == null) {
+        result = data
+        if (slices.length == 0) {
+            return result
+        } else {
+            return result.map(each=>recursiveSlice(each, slices, originalShape))
+        }
+    } else if (typeof slice == "number") {
+        if (data.length <= slice) {
+            throw Error(`tried to get index ${slice} of a dimension of size ${data.length}, from a tensor with an original shape of ${originalShape}`)
+        }
+        result = data.at(slice)
+        if (slices.length == 0) {
+            return result
+        } else {
+            return recursiveSlice(result, slices, originalShape)
+        }
+    } else {
+        throw Error(`slice ${slice} is not a valid index or slice`)
+    }
+}
 export const Ops = {
-    elementMapMutate: (tensor, fn)=>{
-        elementMapMutate(tensor?.data||tensor, fn)
-    },
-    elementMap: (tensor, fn)=>{
-        let arrayClone = structuredClone(tensor?.data||tensor)
-        elementMapMutate(arrayClone, fn)
-        return new Tensor(arrayClone)
-    },
+    // init helpers
     ones: (shape)=>Object.setPrototypeOf(torch.ones(shape), Tensor.prototype),
     zeros: (shape)=>Object.setPrototypeOf(torch.zeros(shape), Tensor.prototype),
-    range: (start, end, {step=1}={}) => new Tensor(Array.from(count(start, end, step))),
+    range: (start, end, {step=1}={}) => {
+        let output = new Tensor(Array.from(count(start, end=end-1, step)))
+        output.start = start
+        output.end = end
+        output.step = step
+        return output
+    },
+    randomNormal: (shape)=>Object.setPrototypeOf(torch.randn(shape), Tensor.prototype),
+    // mappings
+    mapTop(tensor, fn) {
+        return toTensor(tensor).data.map(fn)
+    },
+    _transformElements: (tensor, fn)=>{
+        _transformElements(tensor?.data||tensor, fn)
+        return tensor
+    },
+    transformElements: (tensor, fn)=>{
+        let arrayClone = structuredClone(tensor?.data||tensor)
+        _transformElements(arrayClone, fn)
+        return new Tensor(arrayClone)
+    },
+    // single tensor ops
+    atIndex(tensor, index) {
+        if (!(index instanceof Array)) {
+            throw Error(`atIndex() expects an array of indices, got ${index}`)
+        }
+        return toTensor(tensor).at(index)
+    },
+    at(tensor, indicesOrSlices) {
+        return toTensor(tensor).at(...indicesOrSlices)
+    },
+    gather(tensor, indices, {axis=0}={}) {
+        return 
+    },
+    shapeOf(tensor) {
+        return toTensor(tensor).shape
+    },
+    reshape(tensor, shape) {
+        return toTensor(tensor).reshape(shape)
+    },
+    floor(tensor) {
+        if (typeof tensor == "number") {
+            return Math.floor(tensor)
+        }
+        return toTensor(tensor).floor()
+    },
+    ceil(tensor) {
+        if (typeof tensor == "number") {
+            return Math.ceil(tensor)
+        }
+        return toTensor(tensor).ceil()
+    },
+    flatten(tensor, {depth=null}={}) {
+        return toTensor(tensor).flatten(depth)
+    },
+    disposeOf(tensor) {
+        // note: this is more of a shim so that other libraries can use the same name
+        if (tensor.dispose instanceof Function) {
+            tensor.dispose()
+        }
+    },
+    // elementwise
+    negative: (tensor)=>toTensor(tensor).neg(),
     abs: (tensor)=>{
         tensor = toTensor(tensor)
-        return Ops.elementMap(tensor, a=>Math.abs(a))
+        return Ops.transformElements(tensor, a=>Math.abs(a))
     },
     add: (...values)=>Object.setPrototypeOf(torch.add(...values), Tensor.prototype),
     subtract: (...values)=>Ops.add(values.shift(), ...values.map(a=>a.neg())),
     mul: (...values)=>Object.setPrototypeOf(torch.mul(...values), Tensor.prototype),
     div: (...values)=>Object.setPrototypeOf(torch.div(...values), Tensor.prototype),
-    sum: (...values)=>Object.setPrototypeOf(torch.sum(...values), Tensor.prototype),
-    crossProduct: (...values)=>Object.setPrototypeOf(torch.matmul(...values), Tensor.prototype),
-    randomNormal: (shape)=>Object.setPrototypeOf(torch.randn(shape), Tensor.prototype),
     remainder(tensor, divisor){
         tensor = toTensor(tensor)
-        return Ops.elementMap(tensor, a=>a%divisor)
+        return Ops.transformElements(tensor, a=>a%divisor)
     },
+    // group ops
+    sum: (...values)=>{
+        values = values.map(toTensor)
+        Object.setPrototypeOf(torch.sum(...values), Tensor.prototype)
+    },
+    crossProduct: (...values)=>Object.setPrototypeOf(torch.matmul(...values), Tensor.prototype),
     // TODO:
         // concat/stack-type stuff
         // slice
+        // min/max
+        // argmin/argmax
     // stackVertical: (...values)=>{
     //     if (values.length == 0) {
     //         throw Error(`Cannot stack zero tensors together (zero length tensor not allowed)`)
@@ -90,39 +189,7 @@ export const Ops = {
     //     return new Tensor(newElements)
     // },
 }
-const recursiveSlice = (data, slices, originalShape) => {
-    if (!slices || slices.length == 0) {
-        return data
-    }
-    slices = [...slices]
-    let slice = slices.shift()
-    let result
-    if (slice instanceof Array) {
-        result = data.slice(slice[0], slice[1])
-        if (slices.length == 0) {
-            return result
-        } else {
-            return result.map(each=>recursiveSlice(each, slices, originalShape))
-        }
-    } else if (slice == null) {
-        result = data
-        if (slices.length == 0) {
-            return result
-        } else {
-            return result.map(each=>recursiveSlice(each, slices, originalShape))
-        }
-    } else {
-        if (data.length <= slice) {
-            throw Error(`tried to get index ${slice} of a dimension of size ${data.length}, from a tensor with an original shape of ${originalShape}`)
-        }
-        result = data.at(slice)
-        if (slices.length == 0) {
-            return result
-        } else {
-            return recursiveSlice(result, slices, originalShape)
-        }
-    }
-}
+
 export class Tensor extends torch.Tensor {
     constructor(...args) {
         if (args[0] instanceof torch.Tensor) {
@@ -252,20 +319,20 @@ export class Tensor extends torch.Tensor {
         return new Tensor(this.data.slice(...args))
     }
     floor() {
-        return Ops.elementMap(this, a=>Math.floor(a))
+        return Ops.transformElements(this, a=>Math.floor(a))
     }
     ceil() {
-        return Ops.elementMap(this, a=>Math.ceil(a))
+        return Ops.transformElements(this, a=>Math.ceil(a))
     }
     round(digits=0) {
         if (digits == 0) {
-            return Ops.elementMap(this, a=>Math.ceil(a))
+            return Ops.transformElements(this, a=>Math.ceil(a))
         } else {
-            return Ops.elementMap(this.mul(10**digits), a=>Math.ceil(a)).div(10**digits)
+            return Ops.transformElements(this.mul(10**digits), a=>Math.ceil(a)).div(10**digits)
         }
     }
     mapTop(fn) {
-        return this.data.map(fn)
+        return new Tensor(this.data.map(fn))
     }
 
     // 

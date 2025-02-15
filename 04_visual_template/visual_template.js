@@ -81,10 +81,9 @@ export function visualTemplate(rawImg, x, y, z, azimuth, pitch, vtGlobals) {
     // grab image
     // 
         // Resize the raw image with constraint range
-        const compensatedRange = [VT_IMG_CROP_Y_RANGE[0], VT_IMG_CROP_Y_RANGE[1]+1]
         let subImg = rawImg.at(
-            compensatedRange.map(each=>each-1),
-            VT_IMG_CROP_X_RANGE.map(each=>each-1)
+            {start: VT_IMG_CROP_Y_RANGE[0]-1, end: VT_IMG_CROP_Y_RANGE[1]}, // NOTE: intenionally missing the -1 (for now)
+            {start: VT_IMG_CROP_X_RANGE[0]-1, end: VT_IMG_CROP_X_RANGE[1]-1}
         )
         // FIXME: VT_IMG_RESIZE_Y_RANGE, VT_IMG_RESIZE_X_RANGE are currently ignored (as to avoid needing to find/make a image resizing function)
         let vtResizedImg = subImg // resizeImage(subImg, VT_IMG_RESIZE_Y_RANGE, VT_IMG_RESIZE_X_RANGE)
@@ -129,8 +128,8 @@ export function visualTemplate(rawImg, x, y, z, azimuth, pitch, vtGlobals) {
                 // Extract the patch from the extended image
                 // matlab code reference: patchImg = extVtImg(v : v + PATCH_SIZE_Y_K - 1, u : u + PATCH_SIZE_X_K -1);        
                 const patch = extVtImg.at(
-                    [v, v + PATCH_SIZE_Y_K],
-                    [u, u + PATCH_SIZE_X_K]
+                    {start: v, end: v + PATCH_SIZE_Y_K},
+                    {start: u, end: u + PATCH_SIZE_X_K},
                 )
                 
                 const meanPatchImg = patch.flatten().mean()

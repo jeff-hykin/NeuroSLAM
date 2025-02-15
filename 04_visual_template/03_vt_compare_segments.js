@@ -34,12 +34,12 @@ export function vtCompareSegments({ seg1, seg2, vtPanoramic, halfOffsetRange, ma
             for (let offsetY = 0; offsetY <= maxYOffset; offsetY++) {
                 for (let offsetX = 0; offsetX <= maxXOffset; offsetX++) {
                     const seg1Slice = seg1.at(
-                        [offsetY, height], // TODO: probably an off-by-one error somewhere here -- Jeff
-                        [offsetX, width], // TODO: probably an off-by-one error somewhere here -- Jeff
+                        {start:offsetY, end:height}, // TODO: probably an off-by-one error somewhere here -- Jeff
+                        {start:offsetX, end:width}, // TODO: probably an off-by-one error somewhere here -- Jeff
                     )
                     const seg2Slice = seg2.at(
-                        [0, height - offsetY], // TODO: probably an off-by-one error somewhere here -- Jeff
-                        [0, width - offsetX], // TODO: probably an off-by-one error somewhere here -- Jeff
+                        {start:0, end:height-offsetY}, // TODO: probably an off-by-one error somewhere here -- Jeff
+                        {start:0, end:width-offsetX}, // TODO: probably an off-by-one error somewhere here -- Jeff
                     )
                     const difference = seg1Slice.subtract(seg2Slice)
                     const cDiff = Ops.abs(difference)

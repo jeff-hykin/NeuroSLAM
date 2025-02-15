@@ -33,7 +33,7 @@ export function visualOdometry(rawImg, odoGlobals) {
     let sideEffects = {}
     
     // DEBUGGING: compare to matlab referfence values
-        // let slice = new Tensor(rawImg).at([0,10], [0,8])
+        // let slice = new Tensor(rawImg).at({start:0, end:10}, {start:0, end:8})
         // 
         // const referenceValues = (new Tensor([
         //     [0.4501, 0.4501, 0.4500, 0.4503, 0.4496, 0.4503, 0.4499, 0.4499],
@@ -108,8 +108,10 @@ export function visualOdometry(rawImg, odoGlobals) {
     
     // note there was what I think was an off by one error in the original codebase thats was compensated for by an image resize right after the slice
     // however, here I simply compensate by adding one to the input of ODO_IMG_YAW_ROT_Y_RANGE
-    const compensatedRange = [ODO_IMG_YAW_ROT_Y_RANGE[0], ODO_IMG_YAW_ROT_Y_RANGE[1]+1]
-    let subRawImg = rawImgTensor.at(compensatedRange.map(each=>each-1), ODO_IMG_YAW_ROT_X_RANGE.map(each=>each-1))
+    let subRawImg = rawImgTensor.at(
+        {start:ODO_IMG_YAW_ROT_Y_RANGE[0]-1, end:ODO_IMG_YAW_ROT_Y_RANGE[1]}, // NOTE: there is an intenionally-missing -1 here
+        {start:ODO_IMG_YAW_ROT_X_RANGE[0]-1, end:ODO_IMG_YAW_ROT_X_RANGE[1]-1}
+    )
         // const subRawImgCompare = new Tensor(subRawImg).at([0,10], [0,8])
         // const subRawImgReference = new Tensor([
         //     [0.5342, 0.5443, 0.5054, 0.5125, 0.5734, 0.5278, 0.4985, 0.5045],
@@ -176,17 +178,26 @@ export function visualOdometry(rawImg, odoGlobals) {
     }
 
     // Step 5: Compute height change velocity (vertical velocity)
-    const compensatedOdoImgHeightVYRange = [ODO_IMG_HEIGHT_V_Y_RANGE[0], ODO_IMG_HEIGHT_V_Y_RANGE[1]+1]
-    subRawImg = rawImgTensor.at(compensatedOdoImgHeightVYRange.map(each=>each-1), ODO_IMG_HEIGHT_V_X_RANGE.map(each=>each-1))
+    subRawImg = rawImgTensor.at(
+        {start:ODO_IMG_HEIGHT_V_Y_RANGE[0]-1, end:ODO_IMG_HEIGHT_V_Y_RANGE[1]}, // NOTE: there is an intenionally-missing -1 here
+        {start:ODO_IMG_HEIGHT_V_X_RANGE[0]-1, end:ODO_IMG_HEIGHT_V_X_RANGE[1]-1}
+    )
+
     // console.debug(`subRawImg.shape is:`,subRawImg.shape)
 
     let vertDegPerPixel = FOV_VERT_DEGREE / subRawImg.length
 
     // Adjust image based on yaw offset
     if (minOffsetYawRot > 0) {
-        subRawImg = subRawImg.at([0, subRawImg.shape[0]], [minOffsetYawRot, subRawImg.shape[1]])
+        subRawImg = subRawImg.at(
+            {start:0, end:subRawImg.shape[0]},
+            {start:minOffsetYawRot, end:subRawImg.shape[1]}
+        )
     } else {
-        subRawImg = subRawImg.at([0, subRawImg.shape[0]], [0, subRawImg.shape[1]-minOffsetYawRot])
+        subRawImg = subRawImg.at(
+            {start:0, end:subRawImg.shape[0]}, 
+            {start:0, end:subRawImg.shape[1]-minOffsetYawRot}
+        )
         // original: subRawImg = subRawImg(:, 1 : end -(-minOffsetYawRot));
         // note: I really don't understand the original code's (end -(-minOffsetYawRot))
     }
