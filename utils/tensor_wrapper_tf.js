@@ -70,7 +70,7 @@ const recursiveSlice = (data, slices, originalShape) => {
             } else if (isIterableTechnically(slice)) {
                 result = tf.gather([...slice])
             } else if (slice instanceof tf.Tensor) {
-                result = tf.gather([...slice.dataSync()])
+                result = tf.gather(data, [...slice.dataSync()])
             } else {
                 throw Error(`sorry, slice ${slice} is not a valid index or slice`)
             }
@@ -90,8 +90,8 @@ const recursiveSlice = (data, slices, originalShape) => {
         }
     }
 }
-const subtract = (...values)=>Ops.add(values.shift(), ...values.map(Ops.negative))
-const Ops = {
+const subtract = (...values)=>Ops.add(values.shift(), ...values.map(Ops.neg))
+export const Ops = {
     range: (start, end, {step=1}={}) => tf.range(start, end, step),
     shapeOf: (tensor)=>tensor.shape,
     flatten: (tensor)=>tensor.flatten(),
