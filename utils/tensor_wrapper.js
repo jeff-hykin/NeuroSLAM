@@ -56,6 +56,8 @@ const recursiveSlice = (data, slices, originalShape) => {
         }
     } else if (isIterableTechnically(slice)) {
         return [...slice].map(each=>recursiveSlice(data.at(each), slices, originalShape))
+    } else if (slice instanceof Tensor) {
+        return slice.data.map(each=>recursiveSlice(data.at(each), slices, originalShape))
     } else if (slice == null) {
         result = data
         if (slices.length == 0) {
@@ -81,13 +83,7 @@ export const Ops = {
     // init helpers
     ones: (shape)=>Object.setPrototypeOf(torch.ones(shape), Tensor.prototype),
     zeros: (shape)=>Object.setPrototypeOf(torch.zeros(shape), Tensor.prototype),
-    range: (start, end, {step=1}={}) => {
-        let output = new Tensor(Array.from(count(start, end=end-1, step)))
-        output.start = start
-        output.end = end
-        output.step = step
-        return output
-    },
+    range: (start, end, {step=1}={}) => new Tensor(Array.from(count(start, end=end-1, step))),
     randomNormal: (shape)=>Object.setPrototypeOf(torch.randn(shape), Tensor.prototype),
     // mappings
     mapTop(tensor, fn) {
