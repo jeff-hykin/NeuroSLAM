@@ -1,4 +1,4 @@
-import { Tensor, Ops } from "../utils/tensor_wrapper.js"
+import { Tensor, Ops } from "../utils/tensor_wrapper_torch.js"
 
 export function visualOdoInitial(initGlobals, ...args) {
     let odoGlobals = {

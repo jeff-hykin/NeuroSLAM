@@ -1,5 +1,5 @@
 // Assuming js-pytorch and other necessary functions are available
-import { Tensor, Ops } from "../utils/tensor_wrapper.js"
+import { Tensor, Ops } from "../utils/tensor_wrapper_torch.js"
 
 // Function to compare two image segments
 // NOTE: ths JS version seems to be fully correct!

@@ -1,6 +1,6 @@
 #!/usr/bin/env -S deno run --allow-all
 import { FileSystem, glob } from "https://deno.land/x/quickr@0.6.72/main/file_system.js"
-import { Tensor, Ops } from "../../../utils/tensor_wrapper.js"
+import { Tensor, Ops } from "../../../utils/tensor_wrapper_torch.js"
 
 import { visualOdoInitial } from "../../../03_visual_odometry/00_visual_odo_initial.js"
 import { visualOdoMain } from "../../../03_visual_odometry/01_visual_odo_main.js"

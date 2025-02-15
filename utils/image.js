@@ -1,4 +1,4 @@
-import { Tensor, Ops, autoFillOps } from "../utils/tensor_wrapper.js"
+import { Tensor, Ops, autoFillOps } from "../utils/tensor_wrapper_torch.js"
 
 /**
  * Image resizing function
@@ -7,12 +7,25 @@ import { Tensor, Ops, autoFillOps } from "../utils/tensor_wrapper.js"
  * ```js
  * let height = 40
  * let width = 30
- * import { Tensor, Ops, autoFillOps } from "../utils/tensor_wrapper.js"
+ * import { Ops as TfOps } from "../utils/tensor_wrapper_tf.js"
+ * import { Ops as TorchOps } from "../utils/tensor_wrapper_torch.js"
  * console.log(_grayscaleBilinearResize({
- *     imageTensor: Ops.range(0, (height*width)).reshape([height,-1]),
+ *     imageTensor: TorchOps.range(0, (height*width)).reshape([height,-1]),
  *     height: 4,
  *     width: 3,
- * },Ops))
+ * },TorchOps))
+ * // should output:
+ * //data: [
+ * //   [ 0, 7.25, 29 ],
+ * //   [ 390, 202.25, 419 ],
+ * //   [ 780, 397.25, 809 ],
+ * //   [ 1170, 592.25, 1199 ],
+ * //]
+ * console.log(_grayscaleBilinearResize({
+ *     imageTensor: TfOps.reshape(TfOps.range(0, (height*width)), [height,-1]),
+ *     height: 4,
+ *     width: 3,
+ * },TfOps).print())
  * // should output:
  * //data: [
  * //   [ 0, 7.25, 29 ],

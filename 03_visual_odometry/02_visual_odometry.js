@@ -1,6 +1,6 @@
 // Assuming js-pytorch and other necessary functions are available
 import { zip } from "../imports.js"
-import { Tensor, Ops } from "../utils/tensor_wrapper.js"
+import { Tensor, Ops } from "../utils/tensor_wrapper_torch.js"
 import { crappyRenderAsAsciiGrayscale } from "../utils/misc.js"
 
 import { compareSegments } from "./03_compare_segments.js"

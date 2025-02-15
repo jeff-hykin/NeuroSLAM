@@ -1,5 +1,5 @@
 import { zip } from "../imports.js"
-import { Tensor, Ops } from "../utils/tensor_wrapper.js"
+import { Tensor, Ops } from "../utils/tensor_wrapper_torch.js"
 import { arrayOf, crappyRenderAsAsciiGrayscale } from "../utils/misc.js"
 
 import { vtCompareSegments } from "./03_vt_compare_segments.js"
