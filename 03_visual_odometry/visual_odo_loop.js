@@ -9,7 +9,7 @@ import { toGrayscaleMagnitude } from "../utils/image.js"
 const DEGREE_TO_RADIAN = Math.PI / 180
 const RADIAN_TO_DEGREE = 180 / Math.PI
 
-export function visualOdoLoop({frames, groundTruthFile, odoGlobals}) {
+export async function *visualOdoLoop({frames, groundTruthFile, odoGlobals}) {
     // Getting the visual data information
 
     const { RENDER_RATE } = { RENDER_RATE: 2, ...odoGlobals }
@@ -41,7 +41,7 @@ export function visualOdoLoop({frames, groundTruthFile, odoGlobals}) {
 
     // Processing visual odometry
     let curFrame = -1
-    for (const frame of frames) {
+    for await (const frame of frames) {
         curFrame += 1
         
         // Read current image, convert to grayscale, and convert to magnitude
@@ -50,7 +50,7 @@ export function visualOdoLoop({frames, groundTruthFile, odoGlobals}) {
                 frame
             ),
         )
-        console.log(`curGrayImg`, curGrayImg)
+        // console.log(`curGrayImg`, curGrayImg)
         let preProfilesTransImg = odoGlobals.PREV_TRANS_V_IMG_X_SUMS
         let preProfilesYawRotImg = odoGlobals.PREV_YAW_ROT_V_IMG_X_SUMS
         let preProfilesHeightVImg = odoGlobals.PREV_HEIGHT_V_IMG_Y_SUMS
@@ -72,6 +72,7 @@ export function visualOdoLoop({frames, groundTruthFile, odoGlobals}) {
             PREV_HEIGHT_V: sideEffects.PREV_HEIGHT_V,
             PREV_HEIGHT_V_IMG_Y_SUMS: sideEffects.PREV_HEIGHT_V_IMG_Y_SUMS,
         })
+        console.debug(`sideEffects.PREV_TRANS_V is:`,sideEffects.PREV_TRANS_V)
 
         subRotVel[curFrame] = yawRotV
         transVelVector[curFrame] = transV
@@ -100,7 +101,7 @@ export function visualOdoLoop({frames, groundTruthFile, odoGlobals}) {
         if (curFrame % RENDER_RATE === 0) {
             // Placeholder for plot rendering
             // Use libraries such as plotly.js or three.js to plot the graphs and 3D maps
-            console.log("Rendering frame", curFrame)
+            // console.log("Rendering frame", curFrame)
             
             // Function to compute the normalized profile of horizontal translational image
             function normalizeProfileHorizontal(imgMatrix) {
@@ -134,7 +135,19 @@ export function visualOdoLoop({frames, groundTruthFile, odoGlobals}) {
             // Compute differences between current and previous profiles (if applicable)
             let diffYawRotImgs = profilesYawRotImg.map((value, idx) => value - preProfilesYawRotImg[idx])
             let diffHeightVImgs = profilesHeightVImg.map((value, idx) => value - preProfilesHeightVImg[idx])
-
+            
+            yield {
+                // main data
+                transV, yawRotV, heightV, 
+                // plotting
+                profilesTransImg,
+                profilesYawRotImg,
+                profilesHeightVImg,
+                diffYawRotImgs,
+                diffHeightVImgs,
+                // globals
+                odoGlobals,
+            }
             // 
             // plots
             // 
