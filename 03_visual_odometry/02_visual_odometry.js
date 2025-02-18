@@ -24,13 +24,15 @@ export function visualOdometry(rawImg, odoGlobals) {
         ODO_SHIFT_MATCH_HORI,
         FOV_HORI_DEGREE,
         FOV_VERT_DEGREE,
-        // PREV_HEIGHT_V_IMG_Y_SUMS, // mutated
-        PREV_TRANS_V,
-        PREV_YAW_ROT_V,
-        PREV_HEIGHT_V,
     } = odoGlobals
-
-    let sideEffects = {}
+    
+    // ones listed here are inputs and mutated
+    let sideEffects = {
+        PREV_HEIGHT_V_IMG_Y_SUMS: odoGlobals.PREV_HEIGHT_V_IMG_Y_SUMS,
+        PREV_TRANS_V: odoGlobals.PREV_TRANS_V,
+        PREV_YAW_ROT_V: odoGlobals.PREV_YAW_ROT_V,
+        PREV_HEIGHT_V: odoGlobals.PREV_HEIGHT_V,
+    }
     
     // DEBUGGING: compare to matlab referfence values
         // let slice = new Tensor(rawImg).at({start:0, end:10}, {start:0, end:8})
@@ -160,7 +162,7 @@ export function visualOdometry(rawImg, odoGlobals) {
     let yawRotV = ODO_YAW_ROT_V_SCALE * minOffsetYawRot * horiDegPerPixel // in degrees
 
     if (Math.abs(yawRotV) > MAX_YAW_ROT_V_THRESHOLD) {
-        yawRotV = PREV_YAW_ROT_V
+        yawRotV = sideEffects.PREV_YAW_ROT_V
     } else {
         sideEffects.PREV_YAW_ROT_V = yawRotV
     }
@@ -170,9 +172,12 @@ export function visualOdometry(rawImg, odoGlobals) {
 
     // Step 4: Compute total translational velocity
     let transV = minDiffIntensityRot * ODO_TRANS_V_SCALE
-
+    
+    if (sideEffects.PREV_TRANS_V == null) {
+        sideEffects.PREV_TRANS_V = transV
+    }
     if (transV > MAX_TRANS_V_THRESHOLD) {
-        transV = PREV_TRANS_V
+        transV = sideEffects.PREV_TRANS_V
     } else {
         sideEffects.PREV_TRANS_V = transV
     }
@@ -212,7 +217,7 @@ export function visualOdometry(rawImg, odoGlobals) {
     
     let { minimumOffset: minOffsetHeightV, minimumDifferenceIntensity: minDiffIntensityHeight } = compareSegments({
         seg1: imageYSums,
-        seg2: odoGlobals.PREV_HEIGHT_V_IMG_Y_SUMS,
+        seg2: sideEffects.PREV_HEIGHT_V_IMG_Y_SUMS,
         shiftLength: ODO_SHIFT_MATCH_VERT,
         compareLengthOfIntensity: imageYSums.length,
     }) 
@@ -230,7 +235,7 @@ export function visualOdometry(rawImg, odoGlobals) {
     // }
 
     if (Math.abs(heightV) > MAX_HEIGHT_V_THRESHOLD) {
-        heightV = PREV_HEIGHT_V
+        heightV = sideEffects.PREV_HEIGHT_V
     } else {
         sideEffects.PREV_HEIGHT_V = heightV
     }
