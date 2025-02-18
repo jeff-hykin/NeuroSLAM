@@ -12,7 +12,7 @@ const RADIAN_TO_DEGREE = 180 / Math.PI
 export async function *visualOdoLoop({frames, groundTruthFile, odoGlobals}) {
     // Getting the visual data information
 
-    const { RENDER_RATE } = { RENDER_RATE: 2, ...odoGlobals }
+    const { RENDER_RATE } = { RENDER_RATE: 1, ...odoGlobals }
     // Load ground truth data if provided
     // for some reason this isn't ever used, so I'm commenting it out --Jeff
     // let groundTruthData = []
@@ -72,7 +72,6 @@ export async function *visualOdoLoop({frames, groundTruthFile, odoGlobals}) {
             PREV_HEIGHT_V: sideEffects.PREV_HEIGHT_V,
             PREV_HEIGHT_V_IMG_Y_SUMS: sideEffects.PREV_HEIGHT_V_IMG_Y_SUMS,
         })
-        console.debug(`sideEffects.PREV_TRANS_V is:`,sideEffects.PREV_TRANS_V)
 
         subRotVel[curFrame] = yawRotV
         transVelVector[curFrame] = transV
@@ -221,7 +220,6 @@ export async function *visualOdoLoop({frames, groundTruthFile, odoGlobals}) {
                 //     mode: 'lines',
                 //     name: 'Yaw Rotational Velocity'
                 // };
-                console.debug(`subRotVel is:`,subRotVel)
 
                 // var trace9 = {
                 //     z: odoGlobals.SUB_HEIGHT_V_IMG, 

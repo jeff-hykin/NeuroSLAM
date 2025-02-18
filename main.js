@@ -6,13 +6,18 @@ import { addDynamicStyleFlags, setupStyles, createCssClass, setupClassStyles, ho
 import { zip, enumerate, count, permute, combinations, wrapAroundGet } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.5.1/source/array.js"
 import { mapToAsyncIterable } from "./utils/async.js"
 
-import uint8ArrayFor0001Png from "./01_NeuroSLAM_Datasets.ignore/02_SynPanData/0001.png.binaryified.js"
-import uint8ArrayFor0002Png from "./01_NeuroSLAM_Datasets.ignore/02_SynPanData/0002.png.binaryified.js"
-import uint8ArrayFor0003Png from "./01_NeuroSLAM_Datasets.ignore/02_SynPanData/0003.png.binaryified.js"
-import uint8ArrayFor0004Png from "./01_NeuroSLAM_Datasets.ignore/02_SynPanData/0004.png.binaryified.js"
-import uint8ArrayFor0005Png from "./01_NeuroSLAM_Datasets.ignore/02_SynPanData/0005.png.binaryified.js"
-import uint8ArrayFor0006Png from "./01_NeuroSLAM_Datasets.ignore/02_SynPanData/0006.png.binaryified.js"
-import uint8ArrayFor0007Png from "./01_NeuroSLAM_Datasets.ignore/02_SynPanData/0007.png.binaryified.js"
+// increments of 10 for testing
+import uint8ArrayFor0001Png from "./01_NeuroSLAM_Datasets.ignore/02_SynPanData/0010.png.binaryified.js"
+import uint8ArrayFor0002Png from "./01_NeuroSLAM_Datasets.ignore/02_SynPanData/0020.png.binaryified.js"
+import uint8ArrayFor0003Png from "./01_NeuroSLAM_Datasets.ignore/02_SynPanData/0030.png.binaryified.js"
+import uint8ArrayFor0004Png from "./01_NeuroSLAM_Datasets.ignore/02_SynPanData/0040.png.binaryified.js"
+import uint8ArrayFor0005Png from "./01_NeuroSLAM_Datasets.ignore/02_SynPanData/0050.png.binaryified.js"
+import uint8ArrayFor0006Png from "./01_NeuroSLAM_Datasets.ignore/02_SynPanData/0060.png.binaryified.js"
+import uint8ArrayFor0007Png from "./01_NeuroSLAM_Datasets.ignore/02_SynPanData/0070.png.binaryified.js"
+import uint8ArrayFor0008Png from "./01_NeuroSLAM_Datasets.ignore/02_SynPanData/0080.png.binaryified.js"
+import uint8ArrayFor0009Png from "./01_NeuroSLAM_Datasets.ignore/02_SynPanData/0090.png.binaryified.js"
+import uint8ArrayFor0010Png from "./01_NeuroSLAM_Datasets.ignore/02_SynPanData/0100.png.binaryified.js"
+
 
 
 // 
@@ -53,11 +58,9 @@ import uint8ArrayFor0007Png from "./01_NeuroSLAM_Datasets.ignore/02_SynPanData/0
     }) 
 
     // change some elements
-    let imgElement
+    let imgElement, dataElement
     document.body = html`<body style="padding:1rem;">
-        <br>
-        <myAsyncCustomComponent style='background: darkgray; color: white; padding: 1rem; border-radius: 1rem; margin: 0.3rem;' />
-        <br>
+        ${dataElement = html`<code style='background: darkgray; color: white; padding: 1rem; border-radius: 1rem; margin: 0.3rem; position: fixed; top: 0; left: 0; width: 15rem; max-height: 20rem; overflow: auto; white-space: pre;'></code>`}
         ${imgElement = html`<mainVisualImage pngData=${uint8ArrayFor0001Png} />`}
     </body>`
 
@@ -72,15 +75,18 @@ import uint8ArrayFor0007Png from "./01_NeuroSLAM_Datasets.ignore/02_SynPanData/0
         uint8ArrayFor0005Png,
         uint8ArrayFor0006Png,
         uint8ArrayFor0007Png,
+        uint8ArrayFor0008Png,
+        uint8ArrayFor0009Png,
+        uint8ArrayFor0010Png,
     ]
     
     let frameIterator = mapToAsyncIterable(frameData, async (each)=>{
         // slow down rendering intentionally
         await new Promise(r=>setTimeout(r,1000))
+        let newImageElement = mainVisualImage({pngData: each})
         // update the image
-        imgElement.replaceWith(
-            mainVisualImage({pngData: each})
-        )
+        imgElement.replaceWith(newImageElement)
+        imgElement = newImageElement
         return each
     })
     
@@ -110,8 +116,16 @@ import uint8ArrayFor0007Png from "./01_NeuroSLAM_Datasets.ignore/02_SynPanData/0
         KEY_POINT_SET: [1644, 1741], 
         ODO_STEP: 1
     })
+    let frameIndex = 0
     for await (let { transV, yawRotV, heightV, ...other } of visualOdoLoop({frames: frameIterator, odoGlobals: visualOdoGlobals})) {
-        console.debug(`transV is:`,transV)
-        console.debug(`yawRotV is:`,yawRotV)
-        console.debug(`heightV is:`,heightV)
+        frameIndex++
+
+        // 
+        dataElement.innerText = JSON.stringify({
+            frameIndex,
+            transV,
+            yawRotV,
+            heightV,
+            // ...other
+        }, null, 4)
     }
