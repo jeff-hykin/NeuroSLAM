@@ -146,6 +146,7 @@ export async function *visualOdoLoop({frames, groundTruthFile, odoGlobals}) {
                 diffHeightVImgs,
                 // globals
                 odoGlobals,
+                frame,
             }
             // 
             // plots
