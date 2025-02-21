@@ -1,9 +1,10 @@
 export class Event extends Set {}
 export const trigger = async (event, ...args)=>Promise.all([...event].map(each=>each(...args)))
 export const everyTime = (event)=>({ then:(action)=>event.add(action) })
+const unset = Symbol('unset')
 export const everyTimeAllLatestOf = (...events)=>{
-    const triggered = new Uint8Array(events.length)
-    const values = Array(events)
+    let total = 0
+    const values = Array(events).fill(unset)
     let index = 0
     let response
     let errStack
@@ -15,11 +16,14 @@ export const everyTimeAllLatestOf = (...events)=>{
     for (let each of events) {
         const eachIndex = index++
         everyTime(each).then((value)=>{
-            triggered[eachIndex] = 1
+            if (values[eachIndex]==unset) {
+                total++
+            }
             values[eachIndex] = value
-            if (triggered.every(each=>each)) {
+            if (total===events.length) {
                 // reset
                 triggered.fill(0)
+                total = 0
                 if (response) {
                     Promise.resolve(response(...values)).catch((error)=>{
                         console.error(`error during a everyTimeAllLatestOf response:`,error, errStack)
