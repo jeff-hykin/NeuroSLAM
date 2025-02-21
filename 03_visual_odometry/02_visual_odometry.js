@@ -6,8 +6,7 @@ import { Tensor, Ops } from "../utils/tensor_wrapper_torch.js"
 import { compareSegments } from "./03_compare_segments.js"
 
 // NOTE: ths JS version seems to be fully correct!
-export function visualOdometry(rawImg, odoGlobals) {
-    const {
+export function visualOdometry(rawImg, {
         ODO_IMG_HEIGHT_V_Y_RANGE,
         ODO_IMG_HEIGHT_V_X_RANGE,
         ODO_IMG_YAW_ROT_Y_RANGE,
@@ -24,14 +23,14 @@ export function visualOdometry(rawImg, odoGlobals) {
         ODO_SHIFT_MATCH_HORI,
         FOV_HORI_DEGREE,
         FOV_VERT_DEGREE,
-    } = odoGlobals
+    }) {
     
     // ones listed here are inputs and mutated
     let sideEffects = {
-        PREV_HEIGHT_V_IMG_Y_SUMS: odoGlobals.PREV_HEIGHT_V_IMG_Y_SUMS,
-        PREV_TRANS_V: odoGlobals.PREV_TRANS_V,
-        PREV_YAW_ROT_V: odoGlobals.PREV_YAW_ROT_V,
-        PREV_HEIGHT_V: odoGlobals.PREV_HEIGHT_V,
+        PREV_HEIGHT_V_IMG_Y_SUMS: PREV_HEIGHT_V_IMG_Y_SUMS,
+        PREV_TRANS_V: PREV_TRANS_V,
+        PREV_YAW_ROT_V: PREV_YAW_ROT_V,
+        PREV_HEIGHT_V: PREV_HEIGHT_V,
     }
     
     // DEBUGGING: compare to matlab referfence values
@@ -150,7 +149,7 @@ export function visualOdometry(rawImg, odoGlobals) {
     // Step 3: Compare the current image with the previous image
     let { minimumOffset: minOffsetYawRot, minimumDifferenceIntensity: minDiffIntensityRot } = compareSegments({
         seg1: imgXSums,
-        seg2: odoGlobals.PREV_YAW_ROT_V_IMG_X_SUMS,
+        seg2: PREV_YAW_ROT_V_IMG_X_SUMS,
         shiftLength: ODO_SHIFT_MATCH_HORI,
         compareLengthOfIntensity: imgXSums.length,
     })
