@@ -5,22 +5,16 @@ import { showToast } from "https://esm.sh/gh/jeff-hykin/good-component@0.3.0/mai
 import { addDynamicStyleFlags, setupStyles, createCssClass, setupClassStyles, hoverStyleHelper, combineClasses, mergeStyles, AfterSilent, removeAllChildElements } from "https://esm.sh/gh/jeff-hykin/good-component@0.3.0/main/helpers.js"
 import { zip, enumerate, count, permute, combinations, wrapAroundGet } from "https://esm.sh/gh/jeff-hykin/good-js@1.13.5.1/source/array.js"
 import { mapToAsyncIterable } from "./utils/async.js"
+import { synpan } from "./neo/ground_truth.js"
+import { newRgbImageEvent } from "./neo/rgb_image/event.js"
+import { newGrayscaleImageEvent } from "./neo/grayscale_image/event.js"
+import { newVisualOdomEvent } from "./neo/visual_odom/event.js"
+import { everyTime, everyTimeAllLatestOf, once } from "./utils/event_manager.js"
 
-// increments of 10 for testing
-import uint8ArrayFor0001Png from "./01_NeuroSLAM_Datasets.ignore/02_SynPanData/0071.png.binaryified.js"
-import uint8ArrayFor0002Png from "./01_NeuroSLAM_Datasets.ignore/02_SynPanData/0072.png.binaryified.js"
-import uint8ArrayFor0003Png from "./01_NeuroSLAM_Datasets.ignore/02_SynPanData/0073.png.binaryified.js"
-import uint8ArrayFor0004Png from "./01_NeuroSLAM_Datasets.ignore/02_SynPanData/0074.png.binaryified.js"
-import uint8ArrayFor0005Png from "./01_NeuroSLAM_Datasets.ignore/02_SynPanData/0075.png.binaryified.js"
-import uint8ArrayFor0006Png from "./01_NeuroSLAM_Datasets.ignore/02_SynPanData/0076.png.binaryified.js"
-import uint8ArrayFor0007Png from "./01_NeuroSLAM_Datasets.ignore/02_SynPanData/0077.png.binaryified.js"
-import uint8ArrayFor0008Png from "./01_NeuroSLAM_Datasets.ignore/02_SynPanData/0078.png.binaryified.js"
-import uint8ArrayFor0009Png from "./01_NeuroSLAM_Datasets.ignore/02_SynPanData/0079.png.binaryified.js"
-import uint8ArrayFor0010Png from "./01_NeuroSLAM_Datasets.ignore/02_SynPanData/0080.png.binaryified.js"
-
-import uint8ArrayForSynPanMineCsv from "./02_NeuroSLAM_Groudtruth.ignore/syn_pan_mine.csv.binaryified.js"
-// import { parseCsv, createCsv } from "https://esm.sh/gh/jeff-hykin/good-js@1.14.3.1/source/csv.js"
-import { parseCsv, createCsv } from "https://esm.sh/gh/jeff-hykin/good-js@34eba35/source/csv.js"
+// have them all listen to each other
+import "./neo/rgb_image/node.js"
+import "./neo/grayscale_image/node.js"
+import "./neo/visual_odom/node.js"
 
 // 
 // render
@@ -63,105 +57,26 @@ import { parseCsv, createCsv } from "https://esm.sh/gh/jeff-hykin/good-js@34eba3
     let imgElement, dataElement
     document.body = html`<body style="padding:1rem;">
         ${dataElement = html`<code style='background: darkgray; color: white; padding: 1rem; border-radius: 1rem; margin: 0.3rem; position: fixed; top: 0; left: 0; width: 15rem; max-height: 20rem; overflow: auto; white-space: pre;'></code>`}
-        ${imgElement = html`<mainVisualImage pngData=${uint8ArrayFor0001Png} />`}
+        ${imgElement = html`<mainVisualImage />`}
     </body>`
 
 // 
-// slam 
+// events
 // 
-    const frameData = [
-        uint8ArrayFor0001Png,
-        uint8ArrayFor0002Png,
-        uint8ArrayFor0003Png,
-        uint8ArrayFor0004Png,
-        uint8ArrayFor0005Png,
-        uint8ArrayFor0006Png,
-        uint8ArrayFor0007Png,
-        uint8ArrayFor0008Png,
-        uint8ArrayFor0009Png,
-        uint8ArrayFor0010Png,
-    ]
-    const csvText = new TextDecoder().decode(uint8ArrayForSynPanMineCsv)
-    const sheetData = parseCsv({input: csvText, firstRowIsColumnNames: true})
-    const frameToSheetData = new Map([
-        [uint8ArrayFor0001Png, sheetData[71-1]],
-        [uint8ArrayFor0002Png, sheetData[72-1]],
-        [uint8ArrayFor0003Png, sheetData[73-1]],
-        [uint8ArrayFor0004Png, sheetData[74-1]],
-        [uint8ArrayFor0005Png, sheetData[75-1]],
-        [uint8ArrayFor0006Png, sheetData[76-1]],
-        [uint8ArrayFor0007Png, sheetData[77-1]],
-        [uint8ArrayFor0008Png, sheetData[78-1]],
-        [uint8ArrayFor0009Png, sheetData[79-1]],
-        [uint8ArrayFor0010Png, sheetData[80-1]],
-    ])
-    
-    let prevGroundTruth
-    let eachGroundTruth
-    let eachDelta = {}
-    let frameIterator = mapToAsyncIterable(frameData, async (each)=>{
-        // set the ground truth
-        eachGroundTruth = {...frameToSheetData.get(each)}
-        for (const [key, value] of Object.entries(eachGroundTruth)) {
-            if (key-0 === key-0) {
-                delete eachGroundTruth[key]
-            }
-        }
-        if (prevGroundTruth) {
-            for (let eachKey of Object.keys(prevGroundTruth)) {
-                eachDelta[eachKey] = eachGroundTruth[eachKey] - prevGroundTruth[eachKey]
-            }
-        }
-        prevGroundTruth = eachGroundTruth
-
-        // slow down rendering intentionally
-        await new Promise(r=>setTimeout(r,1000))
-        let newImageElement = mainVisualImage({pngData: each})
+    // render rgb's
+    everyTime(newRgbImageEvent).then(({frame, frameRealIndex, ...other})=>{
+        let newImageElement = mainVisualImage({pngData: frame})
         // update the image
         imgElement.replaceWith(newImageElement)
         imgElement = newImageElement
-        return each
     })
     
-    import { visualOdoInitial } from "./03_visual_odometry/00_visual_odo_initial.js"
-    import { visualOdoLoop } from "./03_visual_odometry/visual_odo_loop.js"
-    var visualOdoGlobals = visualOdoInitial({
-        ODO_IMG_TRANS_Y_RANGE: [51, 150],
-        ODO_IMG_TRANS_X_RANGE: [181, 300],
-        ODO_IMG_HEIGHT_V_Y_RANGE: [51, 150],
-        ODO_IMG_HEIGHT_V_X_RANGE: [180, 300],
-        ODO_IMG_YAW_ROT_Y_RANGE: [51, 150],
-        ODO_IMG_YAW_ROT_X_RANGE: [180, 300],
-        
-        ODO_IMG_TRANS_RESIZE_RANGE: [100, 120], 
-        ODO_IMG_YAW_ROT_RESIZE_RANGE: [100, 120], 
-        ODO_IMG_HEIGHT_V_RESIZE_RANGE: [100, 120], 
-        ODO_TRANS_V_SCALE: 1, 
-        ODO_YAW_ROT_V_SCALE: 1, 
-        ODO_HEIGHT_V_SCALE: 1, 
-        MAX_TRANS_V_THRESHOLD: 0.02, 
-        MAX_YAW_ROT_V_THRESHOLD: 10, 
-        MAX_HEIGHT_V_THRESHOLD: 0.03,  
-        ODO_SHIFT_MATCH_HORI: 36, 
-        ODO_SHIFT_MATCH_VERT: 20, 
-        FOV_HORI_DEGREE: 90, 
-        FOV_VERT_DEGREE: 50, 
-        KEY_POINT_SET: [1644, 1741], 
-        ODO_STEP: 1
-    })
-    
-    let iterIndex = 0
-    for await (let { transV, yawRotV, heightV, frame, ...other } of visualOdoLoop({frames: frameIterator, odoGlobals: visualOdoGlobals})) {
-        iterIndex++
-        
-        // add render data
+    // render data
+    everyTime(newVisualOdomEvent).then(({transV, yawRotV, heightV, frameRealIndex, ...other})=>{
         dataElement.innerText = JSON.stringify({
-            iterIndex,
             transV,
             yawRotV,
             heightV,
-            groundTruth: eachGroundTruth,
-            eachDelta,
-            // ...other
+            groundTruth: synpan[frameRealIndex],
         }, null, 4)
-    }
+    })

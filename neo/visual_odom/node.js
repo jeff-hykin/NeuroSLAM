@@ -1,12 +1,12 @@
 import { Event, trigger, everyTime, everyTimeAllLatestOf, once } from "../../utils/event_manager.js"
-import { Tensor, Ops } from "../utils/tensor_wrapper_torch.js"
+import { Tensor, Ops } from "../../utils/tensor_wrapper_torch.js"
 import { parseCsv } from "../../imports.js"
 import { pathPureName } from "../../imports.js"
 import { VisualOdom } from "./VisualOdom.js"
-import { newVisualOdometryEvent } from "./event.js"
+import { newVisualOdomEvent } from "./event.js"
 
 // input events
-import { newGrayscaleImageEvent } from "../grayscale_frames/event.js"
+import { newGrayscaleImageEvent } from "../grayscale_image/event.js"
 
 const visualOdomObject = new VisualOdom({
     ODO_IMG_TRANS_Y_RANGE: [51, 150],
@@ -35,7 +35,7 @@ const visualOdomObject = new VisualOdom({
 
 everyTime(newGrayscaleImageEvent).then(({frame, frameRealIndex, ...other})=>{
     const { transV, yawRotV, heightV, } = visualOdomObject.next(frame)
-    trigger(visualOdom, {
+    trigger(newVisualOdomEvent, {
         transV, yawRotV, heightV, frameRealIndex,
     })
 })

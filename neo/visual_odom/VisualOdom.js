@@ -1,5 +1,5 @@
 import { Event, trigger, everyTime, everyTimeAllLatestOf, once } from "../../utils/event_manager.js"
-import { Tensor, Ops } from "../utils/tensor_wrapper_torch.js"
+import { Tensor, Ops } from "../../utils/tensor_wrapper_torch.js"
 import { parseCsv, zip } from "../../imports.js"
 import { pathPureName } from "../../imports.js"
 
@@ -19,7 +19,7 @@ function compareSegments({seg1, seg2, shiftLength, compareLengthOfIntensity}) {
     // Convert the segments into torch tensors (assuming they are 1D arrays)
     const tensorSeg1 = new Tensor(seg1)
     const tensorSeg2 = new Tensor(seg2)
-
+    
     // Loop through positive shifts
     for (let offset = 0; offset <= shiftLength; offset++) {
         // starts at 120, goes down in steps of 1, ends at 84
@@ -83,6 +83,12 @@ export function visualOdometryStep(rawImg, {
         ODO_SHIFT_MATCH_HORI,
         FOV_HORI_DEGREE,
         FOV_VERT_DEGREE,
+        // mutated ones
+        PREV_HEIGHT_V_IMG_Y_SUMS,
+        PREV_TRANS_V,
+        PREV_YAW_ROT_V,
+        PREV_HEIGHT_V,
+        PREV_YAW_ROT_V_IMG_X_SUMS,
     }) {
     
     // ones listed here are inputs and mutated
@@ -306,22 +312,53 @@ export function visualOdometryStep(rawImg, {
 }
 
 export class VisualOdom {
-    constructor({ PREV_YAW_ROT_V_IMG_X_SUMS, ODO_IMG_TRANS_RESIZE_RANGE, PREV_HEIGHT_V_IMG_Y_SUMS, ODO_IMG_HEIGHT_V_RESIZE_RANGE, PREV_TRANS_V_IMG_X_SUMS, ODO_SHIFT_MATCH_HORI, PREV_TRANS_V, PREV_YAW_ROT_V, PREV_HEIGHT_V, ODO_IMG_YAW_ROT_RESIZE_RANGE, SUB_TRANS_IMG, SUB_YAW_ROT_IMG, SUB_HEIGHT_V_IM, }) {
+    constructor({
+        ODO_IMG_TRANS_Y_RANGE,
+        ODO_IMG_TRANS_X_RANGE,
+        ODO_IMG_HEIGHT_V_Y_RANGE,
+        ODO_IMG_HEIGHT_V_X_RANGE,
+        ODO_IMG_YAW_ROT_Y_RANGE,
+        ODO_IMG_YAW_ROT_X_RANGE,
+        ODO_IMG_TRANS_RESIZE_RANGE,
+        ODO_IMG_YAW_ROT_RESIZE_RANGE,
+        ODO_IMG_HEIGHT_V_RESIZE_RANGE,
+        ODO_TRANS_V_SCALE,
+        ODO_YAW_ROT_V_SCALE,
+        ODO_HEIGHT_V_SCALE,
+        MAX_TRANS_V_THRESHOLD,
+        MAX_YAW_ROT_V_THRESHOLD,
+        MAX_HEIGHT_V_THRESHOLD,
+        ODO_SHIFT_MATCH_HORI,
+        ODO_SHIFT_MATCH_VERT,
+        FOV_HORI_DEGREE,
+        FOV_VERT_DEGREE,
+        KEY_POINT_SET,
+        ODO_STEP,
+    }) {
         Object.assign(this, {
-            PREV_YAW_ROT_V_IMG_X_SUMS,
+            ODO_IMG_TRANS_Y_RANGE,
+            ODO_IMG_TRANS_X_RANGE,
+            ODO_IMG_HEIGHT_V_Y_RANGE,
+            ODO_IMG_HEIGHT_V_X_RANGE,
+            ODO_IMG_YAW_ROT_Y_RANGE,
+            ODO_IMG_YAW_ROT_X_RANGE,
             ODO_IMG_TRANS_RESIZE_RANGE,
-            PREV_HEIGHT_V_IMG_Y_SUMS,
-            ODO_IMG_HEIGHT_V_RESIZE_RANGE,
-            PREV_TRANS_V_IMG_X_SUMS,
-            ODO_SHIFT_MATCH_HORI,
-            PREV_TRANS_V,
-            PREV_YAW_ROT_V,
-            PREV_HEIGHT_V,
             ODO_IMG_YAW_ROT_RESIZE_RANGE,
-            SUB_TRANS_IMG,
-            SUB_YAW_ROT_IMG,
-            SUB_HEIGHT_V_IM,
+            ODO_IMG_HEIGHT_V_RESIZE_RANGE,
+            ODO_TRANS_V_SCALE,
+            ODO_YAW_ROT_V_SCALE,
+            ODO_HEIGHT_V_SCALE,
+            MAX_TRANS_V_THRESHOLD,
+            MAX_YAW_ROT_V_THRESHOLD,
+            MAX_HEIGHT_V_THRESHOLD,
+            ODO_SHIFT_MATCH_HORI,
+            ODO_SHIFT_MATCH_VERT,
+            FOV_HORI_DEGREE,
+            FOV_VERT_DEGREE,
+            KEY_POINT_SET,
+            ODO_STEP,
         })
+        
         // Initialize the previous image intensity sums
         this.PREV_YAW_ROT_V_IMG_X_SUMS = new Tensor( new Array(this.ODO_IMG_TRANS_RESIZE_RANGE[1]).fill(0) )
         this.PREV_HEIGHT_V_IMG_Y_SUMS = new Tensor( new Array(this.ODO_IMG_HEIGHT_V_RESIZE_RANGE[0]).fill(0) )
@@ -331,9 +368,6 @@ export class VisualOdom {
         this.PREV_TRANS_V = 0.025
         this.PREV_YAW_ROT_V = 0
         this.PREV_HEIGHT_V = 0
-
-        // Getting the visual data information
-        const { RENDER_RATE } = { RENDER_RATE: 1, ...odoGlobals }
 
         // Initializing variables for previous profiles
         this.preProfilesTransImg = Array(this.ODO_IMG_TRANS_RESIZE_RANGE[1]).fill(0)
@@ -354,6 +388,8 @@ export class VisualOdom {
 
         // Processing visual odometry
         this.curFrame = -1
+
+        this.OUTPUT_RATE = 1 // output every single frame
     }
     next(curGrayImg) {
         this.curFrame += 1
@@ -404,7 +440,7 @@ export class VisualOdom {
 
         this.odoMapTrajectory[this.curFrame + 1] = [this.odoMapTrajectory[this.curFrame][0] + transV * Math.cos(this.curRotDir[this.curFrame + 1][2]), this.odoMapTrajectory[this.curFrame][1] + transV * Math.sin(this.curRotDir[this.curFrame + 1][2]), this.odoMapTrajectory[this.curFrame][2] + heightV, this.curRotDir[this.curFrame + 1][2]]
 
-        if (this.curFrame % RENDER_RATE === 0) {
+        if (this.curFrame % this.OUTPUT_RATE === 0) {
             // Placeholder for plot rendering
             // Use libraries such as plotly.js or three.js to plot the graphs and 3D maps
             // console.log("Rendering frame", this.curFrame)
@@ -451,9 +487,6 @@ export class VisualOdom {
                 profilesHeightVImg,
                 diffYawRotImgs,
                 diffHeightVImgs,
-                // globals
-                odoGlobals,
-                frame,
             }
         }
     }
